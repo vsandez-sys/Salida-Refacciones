@@ -1,0 +1,55 @@
+:root {
+    --verde: #A4C639;
+    --gris-oscuro: #333333;
+    --gris-claro: #f4f4f4;
+    --borde: #dddddd;
+}
+
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #e0e0e0; margin: 0; padding: 20px; color: var(--gris-oscuro); }
+
+.main-container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-top: 10px solid var(--verde);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.section { margin-bottom: 25px; border-bottom: 1px solid var(--gris-claro); padding-bottom: 15px; }
+
+.header { display: flex; justify-content: space-between; align-items: center; }
+.logo-area { display: flex; align-items: center; }
+.logo-img { max-height: 70px; margin-right: 20px; }
+
+h1 { margin: 0; font-size: 1.6rem; color: var(--gris-oscuro); }
+h3 { font-size: 0.9rem; text-transform: uppercase; color: var(--verde); margin-bottom: 15px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+.input-group label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
+input { width: 100%; padding: 10px; border: 1px solid var(--borde); border-radius: 4px; box-sizing: border-box; }
+
+table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+th { background: var(--gris-oscuro); color: white; padding: 10px; text-align: left; font-size: 0.8rem; }
+td { border-bottom: 1px solid var(--gris-claro); padding: 8px; }
+
+.textarea-mock { border: 1px solid var(--borde); min-height: 80px; padding: 10px; border-radius: 4px; background: var(--gris-claro); }
+
+/* Botones */
+.actions { margin-top: 30px; display: flex; gap: 10px; }
+.btn-add { background: var(--verde); border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+.btn-pdf { background: var(--gris-oscuro); color: var(--verde); padding: 15px 30px; border: none; cursor: pointer; font-weight: bold; flex-grow: 1; border-radius: 4px; }
+.btn-history { background: #666; color: white; padding: 15px 20px; border: none; cursor: pointer; border-radius: 4px; }
+
+/* Modal */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }
+.modal-content { background: white; width: 90%; max-width: 600px; margin: 50px auto; padding: 20px; border-radius: 8px; }
+.btn-close { width: 100%; margin-top: 20px; padding: 10px; background: var(--gris-oscuro); color: white; border: none; cursor: pointer; }
+
+@media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .header { flex-direction: column; text-align: center; }
+    .logo-area { flex-direction: column; margin-bottom: 20px; }
+}

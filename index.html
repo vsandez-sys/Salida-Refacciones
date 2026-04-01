@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vale de Salida - Almacén</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="section header">
+            <div class="logo-area">
+                <img src="assets/logo.png" id="img-logo" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <div>
+                    <h1>SOMSI S.A. DE C.V.</h1>
+                    <p class="tagline">Control de Inventarios y Refacciones</p>
+                </div>
+            </div>
+            <div class="info-area">
+                <div class="input-group">
+                    <label>Folio:</label>
+                    <input type="text" id="folioVale" placeholder="0001">
+                </div>
+            </div>
+        </header>
+
+        <section class="section">
+            <h3>Personal Responsable</h3>
+            <div class="grid-2">
+                <div class="input-group">
+                    <label>Técnico Asignado:</label>
+                    <input type="text" id="tecnicoNombre" placeholder="Nombre completo">
+                </div>
+                <div class="input-group">
+                    <label>Supervisor:</label>
+                    <input type="text" id="supervisorNombre" placeholder="Nombre del autorizador">
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h3>Especificaciones del Equipo</h3>
+            <div class="grid-3">
+                <div class="input-group">
+                    <label>Marca:</label>
+                    <input type="text" id="equipoMarca" placeholder="Ej. Clark">
+                </div>
+                <div class="input-group">
+                    <label>Nº Económico:</label>
+                    <input type="text" id="equipoEco" placeholder="Ej. 242">
+                </div>
+                <div class="input-group">
+                    <label>Nº de Serie:</label>
+                    <input type="text" id="equipoSerie" placeholder="Ej. ABC123456">
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h3>Refacciones Solicitadas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Código/Parte</th>
+                        <th>Descripción</th>
+                        <th style="width: 15%;">Cant.</th>
+                        <th class="no-print" style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody">
+                    </tbody>
+            </table>
+            <button class="btn-add" onclick="addRow()">+ Agregar Refacción</button>
+        </section>
+
+        <section class="section">
+            <label>Notas / Observaciones Adicionales:</label>
+            <div id="notesArea" contenteditable="true" class="textarea-mock"></div>
+        </section>
+
+        <section class="section-firmas-preview">
+            <p><small>* El documento PDF incluirá los espacios oficiales para firmas.</small></p>
+        </section>
+
+        <div class="actions">
+            <button class="btn-pdf" onclick="exportarPDF()">GENERAR PDF Y GUARDAR</button>
+            <button class="btn-history" onclick="toggleHistorial()">HISTORIAL</button>
+        </div>
+
+        <div id="modalHistorial" class="modal">
+            <div class="modal-content">
+                <h3>Historial Reciente (LocalStorage)</h3>
+                <table class="table-history">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Folio</th>
+                            <th>Técnico</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historialBody"></tbody>
+                </table>
+                <button onclick="toggleHistorial()" class="btn-close">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
