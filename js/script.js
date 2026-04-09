@@ -136,9 +136,9 @@ async function guardarEnNube() {
             serie: document.getElementById('equipoSerie').value
         },
         items: Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => ({
-            cant: tr.querySelector('.cant-field').value,
+            code: tr.querySelector('.code-field').value,
             desc: tr.querySelector('.desc-field').value,
-            code: tr.querySelector('.code-field').value
+            cant: tr.querySelector('.cant-field').value
         })),
         notas: document.getElementById('notesArea').innerText
     };
