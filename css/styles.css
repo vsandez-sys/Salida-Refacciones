@@ -1,55 +1,239 @@
+/* --- ESTILO SOMSI PRO: RESPONSIVO + MODAL --- */
 :root {
     --verde: #A4C639;
-    --gris-oscuro: #333333;
-    --gris-claro: #f4f4f4;
-    --borde: #dddddd;
+    --gris-dark: #1e1e1e;
+    --gris-border: #d1d1d1;
+    --blanco: #ffffff;
 }
 
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #e0e0e0; margin: 0; padding: 20px; color: var(--gris-oscuro); }
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 10px; /* Espacio para móviles */
+}
 
 .main-container {
-    max-width: 900px;
-    margin: auto;
-    background: white;
+    max-width: 850px;
+    margin: 20px auto;
+    background: var(--blanco);
     padding: 30px;
-    border-top: 10px solid var(--verde);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-top: 8px solid var(--verde);
 }
 
-.section { margin-bottom: 25px; border-bottom: 1px solid var(--gris-claro); padding-bottom: 15px; }
+/* Grids Responsivos */
+.grid-2, .grid-3 {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 20px;
+}
 
-.header { display: flex; justify-content: space-between; align-items: center; }
-.logo-area { display: flex; align-items: center; }
-.logo-img { max-height: 70px; margin-right: 20px; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 
-h1 { margin: 0; font-size: 1.6rem; color: var(--gris-oscuro); }
-h3 { font-size: 0.9rem; text-transform: uppercase; color: var(--verde); margin-bottom: 15px; }
+/* Inputs Estilizados */
+.input-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+input[type="text"], input[type="number"], .textarea-mock {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--gris-border);
+    border-radius: 4px;
+    background: #f9f9f9;
+}
 
-.input-group label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
-input { width: 100%; padding: 10px; border: 1px solid var(--borde); border-radius: 4px; box-sizing: border-box; }
+/* Tabla Responsiva */
+.table-container {
+    overflow-x: auto; /* Permite scroll lateral en celular */
+}
 
-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-th { background: var(--gris-oscuro); color: white; padding: 10px; text-align: left; font-size: 0.8rem; }
-td { border-bottom: 1px solid var(--gris-claro); padding: 8px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
 
-.textarea-mock { border: 1px solid var(--borde); min-height: 80px; padding: 10px; border-radius: 4px; background: var(--gris-claro); }
+th {
+    background: var(--gris-dark);
+    color: var(--verde);
+    padding: 12px;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+td { padding: 8px; border-bottom: 1px solid #eee; }
 
 /* Botones */
-.actions { margin-top: 30px; display: flex; gap: 10px; }
-.btn-add { background: var(--verde); border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
-.btn-pdf { background: var(--gris-oscuro); color: var(--verde); padding: 15px 30px; border: none; cursor: pointer; font-weight: bold; flex-grow: 1; border-radius: 4px; }
-.btn-history { background: #666; color: white; padding: 15px 20px; border: none; cursor: pointer; border-radius: 4px; }
-
-/* Modal */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; }
-.modal-content { background: white; width: 90%; max-width: 600px; margin: 50px auto; padding: 20px; border-radius: 8px; }
-.btn-close { width: 100%; margin-top: 20px; padding: 10px; background: var(--gris-oscuro); color: white; border: none; cursor: pointer; }
-
-@media (max-width: 600px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .header { flex-direction: column; text-align: center; }
-    .logo-area { flex-direction: column; margin-bottom: 20px; }
+.actions {
+    display: flex;
+    flex-wrap: wrap; /* Para que bajen en celular */
+    gap: 10px;
+    margin-top: 30px;
 }
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1; /* Crecen igual */
+    min-width: 150px;
+}
+
+.btn-pdf { background: var(--gris-dark); color: var(--verde); }
+.btn-history { background: #666; color: white; }
+.btn-new { background: var(--verde); color: var(--gris-dark); }
+
+/* --- POPUP (MODAL) ESTILIZADO --- */
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(8px); /* Desenfoque de fondo elegante */
+    
+    /* Centrado perfecto */
+    display: none; 
+    align-items: center;
+    justify-content: center;
+}
+
+/* Cuando el modal esté activo, usaremos esta clase desde JS o cambia el display */
+.modal.active {
+    display: flex; 
+}
+
+.modal-content {
+    background: var(--blanco);
+    width: 95%;
+    max-width: 650px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    background: var(--gris-dark);
+    color: var(--verde);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Tabla interna del Historial */
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.historial-table th {
+    background: #f8f9fa;
+    color: #888;
+    font-size: 0.7rem;
+    padding: 12px;
+    text-transform: uppercase;
+}
+
+.historial-table td {
+    padding: 15px 10px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Estilo para los botones dentro del historial */
+.btn-cargar, .btn-eliminar-historial {
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    font-size: 0.75rem;
+}
+
+.btn-cargar {
+    background: var(--verde);
+    color: var(--gris-dark);
+}
+
+.btn-eliminar-historial {
+    background: #ffebee;
+    color: #d32f2f;
+    font-size: 1.1rem;
+    padding: 5px 10px;
+}
+
+.btn-eliminar-historial:hover {
+    background: #d32f2f;
+    color: white;
+}
+
+.modal-footer {
+    padding: 15px;
+    background: #f8f9fa;
+    text-align: right;
+}
+
+/* Móviles */
+@media (max-width: 600px) {
+    .main-container { padding: 15px; }
+    h1 { font-size: 1.2rem; }
+}
+
+/* --- CONTROL DEL LOGO --- */
+.logo-area {
+    display: flex;
+    justify-content: center; /* Centra el logo en móviles */
+    margin-bottom: 20px;
+}
+
+.logo-img {
+    width: 100%;            /* Se adapta al contenedor... */
+    max-width: 250px;       /* ...pero nunca mide más de 250px */
+    height: auto;           /* Mantiene la proporción */
+    object-fit: contain;    /* Evita que se estire feo */
+}
+
+/* En pantallas grandes (PC), lo alineamos a la izquierda */
+@media (min-width: 768px) {
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logo-area {
+        justify-content: flex-start;
+        margin-bottom: 0;
+    }
+}
+h1 { font-size: clamp(1.0rem, 4vw, 1.6rem); }

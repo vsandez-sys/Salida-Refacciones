@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vale de Salida - Almacén</title>
+    <title>Somsi - Vale de Salida</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
-    <div class="main-container">
+    <div class="main-container" id="app-container">
         <header class="section header">
             <div class="logo-area">
-                <img src="assets/logo.png" id="img-logo" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <img src="assets/logo.png" alt="Logo" class="logo-img" onerror="this.style.opacity='0'">
                 <div>
-                    <h1>SOMSI S.A. DE C.V.</h1>
-                    <p class="tagline">Control de Inventarios y Refacciones</p>
+                    <h2>SOMSI S.A. DE C.V.</h2>
+                    <p class="tagline">Salida de Refacciones</p>
                 </div>
             </div>
             <div class="info-area">
@@ -27,17 +27,14 @@
             </div>
         </header>
 
-        <section class="section">
-            <h3>Personal Responsable</h3>
-            <div class="grid-2">
-                <div class="input-group">
-                    <label>Técnico Asignado:</label>
-                    <input type="text" id="tecnicoNombre" placeholder="Nombre completo">
-                </div>
-                <div class="input-group">
-                    <label>Supervisor:</label>
-                    <input type="text" id="supervisorNombre" placeholder="Nombre del autorizador">
-                </div>
+        <section class="section grid-2">
+            <div class="input-group">
+                <label>Técnico:</label>
+                <input type="text" id="tecnicoNombre" placeholder="Nombre completo">
+            </div>
+            <div class="input-group">
+                <label>Autoriza:</label>
+                <input type="text" id="supervisorNombre" placeholder="Nombre de quien autoriza">
             </div>
         </section>
 
@@ -46,15 +43,15 @@
             <div class="grid-3">
                 <div class="input-group">
                     <label>Marca:</label>
-                    <input type="text" id="equipoMarca" placeholder="Ej. Clark">
+                    <input type="text" id="equipoMarca" placeholder="Ej. CLARK">
                 </div>
                 <div class="input-group">
                     <label>Nº Económico:</label>
-                    <input type="text" id="equipoEco" placeholder="Ej. 242">
+                    <input type="text" id="equipoEco" placeholder="Ej. 207">
                 </div>
                 <div class="input-group">
                     <label>Nº de Serie:</label>
-                    <input type="text" id="equipoSerie" placeholder="Ej. ABC123456">
+                    <input type="text" id="equipoSerie" placeholder="Ej. 12345ABC">
                 </div>
             </div>
         </section>
@@ -66,34 +63,77 @@
                     <tr>
                         <th style="width: 25%;">Código/Parte</th>
                         <th>Descripción</th>
-                        <th style="width: 15%;">Cant.</th>
-                        <th class="no-print" style="width: 50px;"></th>
+                        <th style="width: 10%;">Cant.</th>
+                        <th class="no-print" style="width: 40px;"></th>
                     </tr>
                 </thead>
-                <tbody id="itemsBody">
-                    </tbody>
+                <tbody id="itemsBody"></tbody>
             </table>
-            <button class="btn-add" onclick="addRow()">+ Agregar Refacción</button>
+            <button class="btn-add no-print" onclick="addRow()">+ Agregar Fila</button>
         </section>
 
         <section class="section">
-            <label>Notas / Observaciones Adicionales:</label>
+            <label>Notas / Observaciones:</label>
             <div id="notesArea" contenteditable="true" class="textarea-mock"></div>
         </section>
 
-        <section class="section-firmas-preview">
-            <p><small>* El documento PDF incluirá los espacios oficiales para firmas.</small></p>
-        </section>
-
-        <div class="actions">
-            <button class="btn-pdf" onclick="exportarPDF()">GENERAR PDF Y GUARDAR</button>
+        <div class="actions no-print">
+            <button class="btn-pdf" onclick="procesarVale()">GENERAR PDF</button>
             <button class="btn-history" onclick="toggleHistorial()">HISTORIAL</button>
+            <button class="btn-new" onclick="window.location.reload()">NUEVO VALE</button>
         </div>
 
         <div id="modalHistorial" class="modal">
             <div class="modal-content">
-                <h3>Historial Reciente (LocalStorage)</h3>
-                <table class="table-history">
+                <h3>Historial de Vales (Solo Lectura)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Folio</th>
+                                <th>Técnico</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historialBody"></tbody>
+                    </table>
+                </div>
+                <button onclick="toggleHistorial()" class="btn-close">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
+            authDomain: "db-somsi-vales.firebaseapp.com",
+            projectId: "db-somsi-vales",
+            storageBucket: "db-somsi-vales.firebasestorage.app",
+            messagingSenderId: "570162244882",
+            appId: "1:570162244882:web:028488d3dab042d5d897cb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Exportar a global
+        window.db = db;
+// ... dentro de la inicialización de Firebase ...
+window.dbFuncs = { collection, addDoc, getDocs, query, orderBy, limit, doc, deleteDoc };    </script>
+    <script src="js/script.js"></script>
+
+    <div id="modalHistorial" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Historial de Vales Recientes</h2>
+            <span class="close-modal" onclick="toggleHistorial()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="table-wrapper">
+                <table class="historial-table">
                     <thead>
                         <tr>
                             <th>Fecha</th>
@@ -102,13 +142,12 @@
                             <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="historialBody"></tbody>
+                    <tbody id="historialBody">
+                        </tbody>
                 </table>
-                <button onclick="toggleHistorial()" class="btn-close">Cerrar</button>
             </div>
         </div>
     </div>
-
-    <script src="js/script.js"></script>
+</div>
 </body>
 </html>

@@ -1,139 +1,308 @@
+/* --- SOMSI - SISTEMA DE VALES INTEGRADO --- */
+
 document.addEventListener('DOMContentLoaded', () => {
-    addRow(); // Iniciar con una fila vacía
-    cargarHistorialUI();
+    // Si la tabla está vacía al iniciar, ponemos una fila
+    if (document.getElementById('itemsBody').children.length === 0) {
+        addRow();
+    }
 });
 
+// --- 1. GESTIÓN DE LA TABLA ---
 function addRow() {
     const tbody = document.getElementById('itemsBody');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-    <td><input type="text" class="code-field" placeholder="Código"></td>
-        
-        <td><input type="text" class="desc-field" placeholder="Nombre de refacción">
-        <td><input type="number" class="cant-field" value="1"></td></td>
-        
-        <td class="no-print"><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer; font-size:1.2rem;">×</button></td>
+        <td><input type="text" class="code-field" placeholder="Código..."></td>
+        <td><input type="text" class="desc-field" placeholder="Descripción..."></td>
+        <td><input type="number" class="cant-field" value="1"></td>
+        <td class="no-print"><button onclick="this.parentElement.parentElement.remove()" class="btn-del">×</button></td>
     `;
     tbody.appendChild(tr);
 }
 
-// --- GENERACIÓN DE PDF VECTORIAL ---
+// --- 2. GESTIÓN DEL MODAL (POPUP) ---
+function toggleHistorial() {
+    const modal = document.getElementById('modalHistorial');
+    if (!modal) return;
+    
+    if (modal.classList.contains('active')) {
+        modal.classList.remove('active');
+        modal.style.display = "none";
+    } else {
+        modal.classList.add('active');
+        modal.style.display = "flex"; // Para el centrado flex
+        cargarHistorialDesdeNube();
+    }
+}
+
+// Cerrar al hacer clic fuera de la caja blanca
+window.onclick = function(event) {
+    const modal = document.getElementById('modalHistorial');
+    if (event.target == modal) {
+        modal.classList.remove('active');
+        modal.style.display = "none";
+    }
+};
+
+// --- 3. MODO LECTURA (BLOQUEO) ---
+function setModoLectura(bloquear) {
+    // Bloquear/Desbloquear todos los campos de texto
+    const inputs = document.querySelectorAll('input, .textarea-mock');
+    const btnProcesar = document.querySelector('.btn-pdf');
+    
+    inputs.forEach(input => {
+        if (bloquear) {
+            input.setAttribute('readonly', true);
+            input.style.backgroundColor = "#f5f5f5";
+            input.style.cursor = "not-allowed";
+        } else {
+            input.removeAttribute('readonly');
+            input.style.backgroundColor = "";
+            input.style.cursor = "text";
+        }
+    });
+
+    // Ocultar botones de edición (Agregar fila y eliminar fila)
+    const btnAdd = document.querySelector('button[onclick="addRow()"]');
+    const btnsDel = document.querySelectorAll('.btn-del');
+    
+    if (btnAdd) btnAdd.style.display = bloquear ? "none" : "block";
+    btnsDel.forEach(btn => btn.style.display = bloquear ? "none" : "inline-block");
+
+    // Si está bloqueado, el botón de procesar solo genera PDF (sin guardar doble en la nube)
+    if (btnProcesar) {
+        btnProcesar.onclick = bloquear ? exportarPDF : procesarVale;
+        btnProcesar.innerText = bloquear ? "RE-GENERAR PDF" : "GENERAR PDF Y GUARDAR";
+    }
+}
+
+// --- 4. NUEVO VALE (LIMPIAR) ---
+function nuevoVale() {
+    if (!confirm("¿Deseas limpiar todo para crear un nuevo vale?")) return;
+
+    // Limpiar cabecera
+    document.getElementById('folioVale').value = "";
+    document.getElementById('tecnicoNombre').value = "";
+    document.getElementById('supervisorNombre').value = "";
+    document.getElementById('equipoMarca').value = "";
+    document.getElementById('equipoEco').value = "";
+    document.getElementById('equipoSerie').value = "";
+    document.getElementById('notesArea').innerText = "";
+
+    // Limpiar tabla
+    document.getElementById('itemsBody').innerHTML = "";
+    addRow();
+
+    // Desbloquear edición
+    setModoLectura(false);
+}
+
+// --- 5. LÓGICA DE FIREBASE ---
+async function procesarVale() {
+    const btn = document.querySelector('.btn-pdf');
+    btn.disabled = true;
+    btn.innerText = "PROCESANDO...";
+
+    try {
+        if (!window.db) throw new Error("Firebase no conectado.");
+        
+        await guardarEnNube();
+        await exportarPDF();
+        
+        btn.innerText = "¡ÉXITO!";
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = "GENERAR PDF Y GUARDAR";
+        }, 3000);
+
+    } catch (e) {
+        alert("Error: " + e.message);
+        btn.disabled = false;
+        btn.innerText = "REINTENTAR";
+    }
+}
+
+async function guardarEnNube() {
+    const { collection, addDoc } = window.dbFuncs;
+    const valeData = {
+        folio: document.getElementById('folioVale').value,
+        tecnico: document.getElementById('tecnicoNombre').value,
+        supervisor: document.getElementById('supervisorNombre').value,
+        fecha: new Date().toLocaleDateString(),
+        timestamp: Date.now(),
+        equipo: {
+            marca: document.getElementById('equipoMarca').value,
+            economico: document.getElementById('equipoEco').value,
+            serie: document.getElementById('equipoSerie').value
+        },
+        items: Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => ({
+            cant: tr.querySelector('.cant-field').value,
+            desc: tr.querySelector('.desc-field').value,
+            code: tr.querySelector('.code-field').value
+        })),
+        notas: document.getElementById('notesArea').innerText
+    };
+    await addDoc(collection(window.db, "vales"), valeData);
+}
+
+async function cargarHistorialDesdeNube() {
+    const { collection, getDocs, query, orderBy, limit } = window.dbFuncs;
+    const container = document.getElementById('historialBody');
+    
+    try {
+        const q = query(collection(window.db, "vales"), orderBy("timestamp", "desc"), limit(15));
+        const snapshot = await getDocs(q);
+        container.innerHTML = "";
+
+        snapshot.forEach(docSnap => {
+            const v = docSnap.data();
+            const id = docSnap.id;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${v.fecha}</td>
+                <td>${v.folio}</td>
+                <td>
+                    <button class="btn-cargar" onclick='cargarValeEnPantalla(${JSON.stringify(v)})'>VER</button>
+                    <button class="btn-del" style="margin-left:8px" onclick="eliminarVale('${id}')">🗑️</button>
+                </td>
+            `;
+            container.appendChild(tr);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function eliminarVale(id) {
+    if (!confirm("¿Eliminar este vale permanentemente?")) return;
+    const { doc, deleteDoc } = window.dbFuncs;
+    try {
+        await deleteDoc(doc(window.db, "vales", id));
+        cargarHistorialDesdeNube();
+    } catch (e) { alert("Error al borrar"); }
+}
+
+window.cargarValeEnPantalla = function(v) {
+    document.getElementById('folioVale').value = v.folio;
+    document.getElementById('tecnicoNombre').value = v.tecnico;
+    document.getElementById('supervisorNombre').value = v.supervisor;
+    document.getElementById('equipoMarca').value = v.equipo.marca;
+    document.getElementById('equipoEco').value = v.equipo.economico;
+    document.getElementById('equipoSerie').value = v.equipo.serie;
+    document.getElementById('notesArea').innerText = v.notas;
+
+    const tbody = document.getElementById('itemsBody');
+    tbody.innerHTML = "";
+    v.items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="number" class="cant-field" value="${item.cant}"></td>
+            <td><input type="text" class="desc-field" value="${item.desc}"></td>
+            <td><input type="text" class="code-field" value="${item.code}"></td>
+            <td class="no-print"><button onclick="this.parentElement.parentElement.remove()" class="btn-del">×</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    setModoLectura(true);
+    toggleHistorial();
+};
+
+// --- 6. EXPORTACIÓN PDF ---
 async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // 1. Obtener Datos
-    const folio = document.getElementById('folioVale').value || "S/F";
-    const tecnico = document.getElementById('tecnicoNombre').value || "N/A";
-    const supervisor = document.getElementById('supervisorNombre').value || "N/A";
-    
-    const marca = document.getElementById('equipoMarca').value || "---";
-    const economico = document.getElementById('equipoEco').value || "---";
-    const serie = document.getElementById('equipoSerie').value || "---";
-    const notas = document.getElementById('notesArea').innerText || "Sin observaciones.";
-
-    // 2. Encabezado Estilizado
-    doc.setFillColor(51, 51, 51); // Gris Oscuro
-    doc.rect(0, 0, 210, 35, 'F');
-    doc.setTextColor(164, 198, 57); // Verde Limón
+    // --- ENCABEZADO ESTILO SOMSI ---
+    doc.setFillColor(51, 51, 51); 
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(164, 198, 57); 
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("VALE DE SALIDA", 15, 23);
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.text("SISTEMA DE GESTIÓN DE ALMACÉN", 15, 30);
+    doc.text("SOMSI - VALE DE SALIDA", 15, 20);
 
-    // 3. Información General
+    // --- INFORMACIÓN DEL VALE (COLUMNA IZQUIERDA) ---
     doc.setTextColor(51, 51, 51);
     doc.setFontSize(10);
-    doc.text(`FOLIO: ${folio}`, 160, 45);
-    doc.text(`FECHA: ${new Date().toLocaleDateString()}`, 160, 50);
+    doc.setFont("helvetica", "normal");
     
-    doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL SOLICITANTE:", 15, 45);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Técnico: ${tecnico}`, 15, 51);
-    doc.text(`Autoriza: ${supervisor}`, 15, 57);
+    // Fila 1 (Y=45)
+    doc.text(`TÉCNICO: ${document.getElementById('tecnicoNombre').value.toUpperCase()}`, 15, 45);
 
-    // 4. SECCIÓN EQUIPO (DIBUJO MANUAL)
-    doc.setDrawColor(164, 198, 57);
-    doc.line(15, 63, 195, 63);
-    doc.setFont("helvetica", "bold");
-    doc.text("ESPECIFICACIONES DEL EQUIPO:", 15, 70);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Marca: ${marca}`, 15, 77);
-    doc.text(`Económico: ${economico}`, 75, 77);
-    doc.text(`Serie: ${serie}`, 135, 77);
+    // Fila 2 (Y=52) - AQUÍ ESTABA EL PROBLEMA
+    const supervisor = document.getElementById('supervisorNombre').value.toUpperCase();
+    doc.text(`SUPERVISOR: ${supervisor}`, 15, 52); 
 
-    // 5. TABLA DE REFACCIONES
+    // Fila 3 (Y=59) - Bajamos la Marca y Económico
+    const marca = document.getElementById('equipoMarca').value.toUpperCase();
+    const eco = document.getElementById('equipoEco').value.toUpperCase();
+    doc.text(`MARCA: ${marca}`, 15, 59); 
+    doc.text(`ECONÓMICO: ${eco}`, 70, 59); // Mantenemos la separación X=70
+
+    // Fila 4 (Y=66) - Bajamos el Número de Serie
+    doc.text(`NÚMERO DE SERIE: ${document.getElementById('equipoSerie').value.toUpperCase()}`, 15, 66);
+    
+    // --- COLUMNA DERECHA (Mismas coordenadas Y para que alineen) ---
+    doc.text(`FOLIO: ${document.getElementById('folioVale').value}`, 160, 45); // Alinea con Técnico
+    doc.text(`FECHA: ${new Date().toLocaleDateString()}`, 160, 52); // Alinea con Supervisor
+
+
+
+    // --- TABLA DE REFACCIONES ---
     const tableRows = Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => [
         tr.querySelector('.cant-field').value,
-        tr.querySelector('.desc-field').value,
-        tr.querySelector('.code-field').value
+        tr.querySelector('.desc-field').value.toUpperCase(),
+        tr.querySelector('.code-field').value.toUpperCase()
     ]);
 
-    doc.autoTable({
-        startY: 85,
-        head: [['CANT', 'DESCRIPCIÓN DE LA REFACCIÓN', 'CÓDIGO / PARTE']],
+       doc.autoTable({
+        startY: 75, // Cambiamos de 65 a 75 para dar un colchón de aire
+        head: [['CANT', 'DESCRIPCIÓN DE REFACCIÓN / HERRAMIENTA', 'CÓDIGO/PARTE']],
+        // ... resto de tu configuración ...
         body: tableRows,
         headStyles: { fillColor: [51, 51, 51], textColor: [164, 198, 57], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        styles: { fontSize: 9, cellPadding: 3 }
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 40 }
+        }
     });
 
-    // 6. NOTAS
-    let finalY = doc.lastAutoTable.finalY + 15;
-    if (finalY > 240) { doc.addPage(); finalY = 20; } // Salto de página si no cabe
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("OBSERVACIONES:", 15, finalY);
-    doc.setFont("helvetica", "normal");
-    doc.text(doc.splitTextToSize(notas, 180), 15, finalY + 7);
-
-    // 7. FIRMAS (Posición Fija abajo)
-    const fY = 270;
+    // --- PIE DE PÁGINA (FIRMAS) ---
+    // Calculamos la posición después de la tabla
+    const finalY = doc.lastAutoTable.finalY + 35;
     doc.setFontSize(8);
-    doc.line(15, fY, 65, fY); doc.text("ENTREGA (ALMACÉN)", 23, fY + 5);
-    doc.line(80, fY, 130, fY); doc.text("RECIBE (TÉCNICO)", 92, fY + 5);
-    doc.line(145, fY, 195, fY); doc.text("AUTORIZA (SUPERVISOR)", 155, fY + 5);
-
-    // 8. Output
-    const blobUrl = doc.output('bloburl');
-    window.open(blobUrl, '_blank');
     
-    guardarEnHistorial(folio, tecnico);
-}
+    // Líneas de firma
+    const lineWidth = 50;
+    const margin = 15;
+    const spacing = 15;
 
-// --- HISTORIAL EN LOCALSTORAGE ---
-function guardarEnHistorial(folio, tecnico) {
-    const data = { id: Date.now(), fecha: new Date().toLocaleDateString(), folio, tecnico };
-    let list = JSON.parse(localStorage.getItem('almacen_vales')) || [];
-    list.unshift(data);
-    localStorage.setItem('almacen_vales', JSON.stringify(list.slice(0, 15)));
-    cargarHistorialUI();
-}
+    // 1. Firma Almacén (Izquierda)
+    doc.line(margin, finalY, margin + lineWidth, finalY);
+    doc.text("ENTREGA (ALMACÉN)", margin + (lineWidth / 2), finalY + 5, { align: "center" });
 
-function cargarHistorialUI() {
-    const list = JSON.parse(localStorage.getItem('almacen_vales')) || [];
-    const container = document.getElementById('historialBody');
-    container.innerHTML = list.map(v => `
-        <tr>
-            <td>${v.fecha}</td>
-            <td>${v.folio}</td>
-            <td>${v.tecnico}</td>
-            <td><button onclick="eliminarH(${v.id})" style="color:red; border:none; background:none; cursor:pointer;">Eliminar</button></td>
-        </tr>
-    `).join('');
-}
+    // 2. Firma Técnico (Centro)
+    const centroX = 105 - (lineWidth / 2);
+    doc.line(105 - (lineWidth / 2), finalY, 105 + (lineWidth / 2), finalY);
+    doc.text("RECIBE (TÉCNICO)", 105, finalY + 5, { align: "center" });
+    
+    // Si capturaste firma digital, la ponemos aquí
+    if (typeof signaturePad !== 'undefined' && !signaturePad.isEmpty()) {
+        const firmaData = signaturePad.toDataURL();
+        doc.addImage(firmaData, 'PNG', 105 - 20, finalY - 20, 40, 18);
+    }
 
-function eliminarH(id) {
-    let list = JSON.parse(localStorage.getItem('almacen_vales')) || [];
-    localStorage.setItem('almacen_vales', JSON.stringify(list.filter(v => v.id !== id)));
-    cargarHistorialUI();
-}
+    // 3. Firma Autoriza (Derecha)
+    const derechaX = 210 - margin - lineWidth;
+    doc.line(derechaX, finalY, 210 - margin, finalY);
+    doc.text("AUTORIZA (SUPERVISOR)", derechaX + (lineWidth / 2), finalY + 5, { align: "center" });
 
-function toggleHistorial() {
-    const m = document.getElementById('modalHistorial');
-    m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    // Notas finales si existen
+    const notas = document.getElementById('notesArea').innerText;
+    if (notas) {
+        doc.setFontStyle('italic');
+        doc.text(`NOTAS: ${notas}`, 15, finalY + 15);
+    }
+
+    // Abrir PDF
+    window.open(doc.output('bloburl'), '_blank');
 }
