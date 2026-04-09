@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Si la tabla está vacía al iniciar, ponemos una fila
     if (document.getElementById('itemsBody').children.length === 0) {
         addRow();
+        
+    }
+});
+window.addEventListener('load', () => {
+    // Verificamos si Firebase cargó correctamente
+    if (typeof firebase === 'undefined' && !window.db) {
+        alert("⚠️ ATENCIÓN: Un bloqueador de publicidad está impidiendo el funcionamiento del sistema. Por favor, desactiva AdBlock para esta página para poder guardar vales.");
     }
 });
 
