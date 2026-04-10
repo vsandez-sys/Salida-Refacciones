@@ -306,8 +306,7 @@ async function exportarPDF() {
     // Notas finales si existen
     const notas = document.getElementById('notesArea').innerText;
     if (notas) {
-        doc.setFontStyle('italic');
-        doc.text(`NOTAS: ${notas}`, 15, finalY + 15);
+doc.setFont("helvetica", "italic"); // Esta es la forma correcta ahora        doc.text(`NOTAS: ${notas}`, 15, finalY + 15);
     }
 
     // Abrir PDF
