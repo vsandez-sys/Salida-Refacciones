@@ -22,7 +22,7 @@
             <div class="info-area">
                 <div class="input-group">
                     <label>Folio:</label>
-                    <input type="text" id="folioVale" placeholder="0001">
+                    <input type="text" id="folioVale" placeholder="Cargando..." readonly>
                 </div>
             </div>
         </header>
@@ -58,17 +58,19 @@
 
         <section class="section">
             <h3>Refacciones Solicitadas</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Código/Parte</th>
-                        <th>Descripción</th>
-                        <th style="width: 10%;">Cant.</th>
-                        <th class="no-print" style="width: 40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="itemsBody"></tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Cant.</th>
+                            <th>Descripción</th>
+                            <th style="width: 25%;">Código/Parte</th>
+                            <th class="no-print" style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody"></tbody>
+                </table>
+            </div>
             <button class="btn-add no-print" onclick="addRow()">+ Agregar Fila</button>
         </section>
 
@@ -78,76 +80,84 @@
         </section>
 
         <div class="actions no-print">
-            <button class="btn-pdf" onclick="procesarVale()">GENERAR PDF</button>
+            <button class="btn-pdf" onclick="procesarVale()">GENERAR PDF Y GUARDAR</button>
             <button class="btn-history" onclick="toggleHistorial()">HISTORIAL</button>
-            <button class="btn-new" onclick="window.location.reload()">NUEVO VALE</button>
+            <button class="btn-new" onclick="nuevoVale()">NUEVO VALE</button>
         </div>
 
         <div id="modalHistorial" class="modal">
             <div class="modal-content">
-                <h3>Historial de Vales (Solo Lectura)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Folio</th>
-                                <th>Técnico</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historialBody"></tbody>
-                    </table>
+                <div class="modal-header">
+                    <h2>Historial de Vales</h2>
                 </div>
-                <button onclick="toggleHistorial()" class="btn-close">Cerrar</button>
+                <div class="modal-body">
+                    <input type="text" id="busquedaEco" placeholder="🔍 Buscar por Nº Económico..." onkeyup="filtrarHistorial()">
+                    <div class="table-wrapper">
+                        <table class="historial-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha y Hora</th>
+                                    <th>Folio</th>
+                                    <th>Económico</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historialBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="toggleHistorial()" class="btn-close">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
-            authDomain: "db-somsi-vales.firebaseapp.com",
-            projectId: "db-somsi-vales",
-            storageBucket: "db-somsi-vales.firebasestorage.app",
-            messagingSenderId: "570162244882",
-            appId: "1:570162244882:web:028488d3dab042d5d897cb"
-        };
+   // --- Busca esta parte en tu index.html ---
+<script type="module">
+    // 1. Importaciones (Asegúrate de que setDoc esté aquí)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getFirestore, 
+        collection, 
+        addDoc, 
+        getDocs, 
+        query, 
+        orderBy, 
+        limit, 
+        doc, 
+        getDoc, 
+        setDoc,     // <-- Primera verificación
+        deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
+        authDomain: "db-somsi-vales.firebaseapp.com",
+        projectId: "db-somsi-vales",
+        storageBucket: "db-somsi-vales.firebasestorage.app",
+        messagingSenderId: "570162244882",
+        appId: "1:570162244882:web:028488d3dab042d5d897cb"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Exportar a global
-        window.db = db;
-// ... dentro de la inicialización de Firebase ...
-window.dbFuncs = { collection, addDoc, getDocs, query, orderBy, limit, doc, deleteDoc };    </script>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // 2. Exportar a global (Aquí es donde script.js lo toma)
+    window.db = db;
+    window.dbFuncs = { 
+        collection, 
+        addDoc, 
+        getDocs, 
+        query, 
+        orderBy, 
+        limit, 
+        doc, 
+        getDoc, 
+        setDoc,     // <-- Segunda verificación: ¡Esto es vital!
+        deleteDoc 
+    };
+</script>
     <script src="js/script.js"></script>
-
-    <div id="modalHistorial" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Historial de Vales Recientes</h2>
-            <span class="close-modal" onclick="toggleHistorial()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="table-wrapper">
-                <table class="historial-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Folio</th>
-                            <th>Técnico</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historialBody">
-                        </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
