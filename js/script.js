@@ -70,30 +70,59 @@ async function procesarVale() {
 }
 
 async function guardarEnNube() {
-    const { collection, addDoc, doc, setDoc } = window.dbFuncs;
-    const folioNum = Number(document.getElementById('folioVale').value);
-    const valeData = {
-        folio: folioNum,
-        tecnico: document.getElementById('tecnicoNombre').value,
-        supervisor: document.getElementById('supervisorNombre').value,
-        timestamp: Date.now(), // Usamos timestamp para hora exacta
-        equipo: {
-            marca: document.getElementById('equipoMarca').value,
-            economico: document.getElementById('equipoEco').value,
-            serie: document.getElementById('equipoSerie').value
-        },
-        items: Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => ({
-            cant: tr.querySelector('.cant-field').value,
-            desc: tr.querySelector('.desc-field').value,
-            code: tr.querySelector('.code-field').value
-        })),
-        notas: document.getElementById('notesArea').innerText
-    };
+    const { collection, addDoc, doc, runTransaction } = window.dbFuncs;
+    const sfDocRef = doc(window.db, "config", "folios");
+    let folioAsignado;
 
-    await addDoc(collection(window.db, "vales"), valeData);
-    
-    const contadorRef = doc(window.db, "config", "folios");
-    await setDoc(contadorRef, { ultimoFolio: folioNum }, { merge: true });
+    try {
+        await runTransaction(window.db, async (transaction) => {
+            const sfDoc = await transaction.get(sfDocRef);
+            
+            // Si no existe el documento de folios, empezamos en 1
+            let nuevoFolio = 1;
+            if (sfDoc.exists()) {
+                nuevoFolio = (sfDoc.data().ultimoFolio || 0) + 1;
+            }
+
+            folioAsignado = nuevoFolio;
+
+            // Preparamos la data del vale con el folio que acabamos de calcular
+            const valeData = {
+                folio: folioAsignado,
+                tecnico: document.getElementById('tecnicoNombre').value,
+                supervisor: document.getElementById('supervisorNombre').value,
+                timestamp: Date.now(),
+                equipo: {
+                    marca: document.getElementById('equipoMarca').value,
+                    economico: document.getElementById('equipoEco').value,
+                    serie: document.getElementById('equipoSerie').value
+                },
+                items: Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => ({
+                    cant: tr.querySelector('.cant-field').value,
+                    desc: tr.querySelector('.desc-field').value,
+                    code: tr.querySelector('.code-field').value
+                })),
+                notas: document.getElementById('notesArea').innerText
+            };
+
+            // 1. Guardamos el vale dentro de la transacción
+            const valesRef = collection(window.db, "vales");
+            // Nota: addDoc no funciona directo en transacciones, usamos un doc con ID automático
+            const nuevoValeRef = doc(valesRef); 
+            transaction.set(nuevoValeRef, valeData);
+
+            // 2. Actualizamos el contador maestro
+            transaction.set(sfDocRef, { ultimoFolio: folioAsignado }, { merge: true });
+        });
+
+        // Actualizamos el número en la pantalla del usuario solo para que sepa cuál le tocó
+        document.getElementById('folioVale').value = folioAsignado;
+        console.log("Vale guardado con éxito. Folio asignado:", folioAsignado);
+
+    } catch (e) {
+        console.error("Error en la transacción: ", e);
+        throw e;
+    }
 }
 
 async function cargarHistorialDesdeNube() {
