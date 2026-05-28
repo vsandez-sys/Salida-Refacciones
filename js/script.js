@@ -126,10 +126,12 @@ async function guardarEnNube() {
 }
 
 async function cargarHistorialDesdeNube() {
-    const { collection, getDocs, query, orderBy, limit } = window.dbFuncs;
+    // Quitamos 'limit' de las herramientas que se mandan llamar de Firebase
+    const { collection, getDocs, query, orderBy } = window.dbFuncs;
     const container = document.getElementById('historialBody');
     try {
-        const q = query(collection(window.db, "vales"), orderBy("timestamp", "desc"), limit(30));
+        // CORRECCIÓN: Eliminamos limit(30) para que traiga TODO el historial disponible
+        const q = query(collection(window.db, "vales"), orderBy("timestamp", "desc"));
         const snapshot = await getDocs(q);
         container.innerHTML = "";
         
@@ -159,7 +161,6 @@ async function cargarHistorialDesdeNube() {
         });
     } catch (e) { console.error(e); }
 }
-
 window.cargarValeEnPantalla = function(v) {
     document.getElementById('folioVale').value = v.folio;
     document.getElementById('tecnicoNombre').value = v.tecnico;
@@ -199,13 +200,15 @@ async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    doc.setFillColor(51, 51, 51);
+    // Encabezado principal
+    doc.setFillColor(30, 30, 30);
     doc.rect(0, 0, 210, 30, 'F');
     doc.setTextColor(164, 198, 57);
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
     doc.text("SOMSI - VALE DE SALIDA", 15, 20);
 
+    // Datos del Vale
     doc.setTextColor(51, 51, 51);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -218,6 +221,7 @@ async function exportarPDF() {
     doc.text(`FOLIO: ${document.getElementById('folioVale').value}`, 160, 45);
     doc.text(`FECHA/HORA: ${new Date().toLocaleString()}`, 145, 52);
 
+    // Filas de la tabla
     const rows = Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => [
         tr.querySelector('.cant-field').value,
         tr.querySelector('.desc-field').value.toUpperCase(),
@@ -228,28 +232,52 @@ async function exportarPDF() {
         startY: 75,
         head: [['CANT', 'DESCRIPCIÓN', 'CÓDIGO']],
         body: rows,
-        headStyles: { fillColor: [51, 51, 51], textColor: [164, 198, 57] }
+        headStyles: { fillColor: [30, 30, 30], textColor: [164, 198, 57] },
+        styles: { fontSize: 9, cellPadding: 4 }
     });
 
-    const fY = doc.lastAutoTable.finalY + 30;
-    doc.line(15, fY, 65, fY);
-    doc.text("ALMACÉN", 40, fY + 5, {align: "center"});
-    doc.line(80, fY, 130, fY);
-    doc.text("TÉCNICO", 105, fY + 5, {align: "center"});
-    doc.line(145, fY, 195, fY);
-    doc.text("AUTORIZA", 170, fY + 5, {align: "center"});
-    doc.setFont("helvetica", "bold");
-    doc.text(document.getElementById('supervisorNombre').value.toUpperCase(), 170, fY + 10, {align: "center"});
+    // Control de altura dinámica
+    let fY = doc.lastAutoTable.finalY + 15;
 
+    // --- MANEJO INTELIGENTE DE NOTAS ---
     const notas = document.getElementById('notesArea').innerText;
     if (notas) {
         doc.setFont("helvetica", "italic");
-        doc.text(`NOTAS: ${notas}`, 15, fY + 25);
+        // Ajusta el texto automáticamente si es muy largo para que no se salga del margen derecho
+        const splitNotas = doc.splitTextToSize(`NOTAS: ${notas.toUpperCase()}`, 180);
+        
+        // Si las notas exceden el límite inferior de la página, saltamos de hoja
+        if (fY + (splitNotas.length * 5) > 275) {
+            doc.addPage();
+            fY = 25;
+        }
+        doc.text(splitNotas, 15, fY);
+        fY += (splitNotas.length * 5) + 20; // Espaciado después de notas
     }
+
+    // --- MANEJO INTELIGENTE DE REGLA DE FIRMAS (Evita que desaparezcan) ---
+    // Si la posición actual + el bloque de firmas (aprox 35mm) supera el alto de la página (297mm)
+    if (fY + 35 > 280) {
+        doc.addPage();
+        fY = 35; // Reiniciar margen en la nueva página
+    }
+
+    // Dibujo de Firmas Seguro
+    doc.setFont("helvetica", "normal");
+    doc.line(15, fY, 65, fY);
+    doc.text("ALMACÉN", 40, fY + 5, {align: "center"});
+    
+    doc.line(80, fY, 130, fY);
+    doc.text("TÉCNICO", 105, fY + 5, {align: "center"});
+    
+    doc.line(145, fY, 195, fY);
+    doc.text("AUTORIZA", 170, fY + 5, {align: "center"});
+    
+    doc.setFont("helvetica", "bold");
+    doc.text(document.getElementById('supervisorNombre').value.toUpperCase(), 170, fY + 10, {align: "center"});
 
     window.open(doc.output('bloburl'), '_blank');
 }
-
 // --- UTILIDADES ---
 function nuevoVale() {
     if (!confirm("¿Deseas limpiar todo para un nuevo vale?")) return;
