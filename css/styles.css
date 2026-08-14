@@ -374,3 +374,44 @@ button:active {
         width: 100%;
     }
 }
+/* Botón Excel */
+.btn-excel {
+    background: #107c41; /* Verde característico de Excel */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-excel:hover {
+    background: #0c5e31 !important;
+}
+
+.btn-excel:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Estilo para los campos que ya están en la base de datos */
+.item-bloqueado {
+    background-color: #e9ecef;
+    color: #6c757d;
+    border: 1px solid #ced4da;
+    pointer-events: none; /* Evita que el usuario haga clic o edite */
+    user-select: none;
+}
+
+.fila-articulo {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.fila-articulo input {
+    padding: 8px;
+    border-radius: 4px;
+}
