@@ -292,32 +292,31 @@ window.guardarNuevosArticulosEnFolio = async function () {
     }
 };
 
-// --- PDF ---
-// --- PDF OPTIMIZADO CON REDUCCIÓN DINÁMICA DE TABLA ---
+/// --- PDF OPTIMIZADO CON REDUCCIÓN DINÁMICA Y MANEJO DE PÁGINAS ---
 window.exportarPDF = async function () {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF(); // Hoja A4 por defecto (210mm x 297mm)
 
     // 1. Encabezado principal
     doc.setFillColor(30, 30, 30);
-    doc.rect(0, 0, 210, 30, 'F');
+    doc.rect(0, 0, 210, 28, 'F');
     doc.setTextColor(164, 198, 57);
-    doc.setFontSize(22);
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("SOMSI - VALE DE SALIDA", 15, 20);
+    doc.text("SOMSI - VALE DE SALIDA", 15, 18);
 
     // 2. Datos del Vale
     doc.setTextColor(51, 51, 51);
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setFont("helvetica", "normal");
 
-    doc.text(`TÉCNICO: ${document.getElementById('tecnicoNombre').value.toUpperCase()}`, 15, 45);
-    doc.text(`SUPERVISOR: ${document.getElementById('supervisorNombre').value.toUpperCase()}`, 15, 52);
-    doc.text(`MARCA: ${document.getElementById('equipoMarca').value.toUpperCase()}`, 15, 59);
-    doc.text(`ECONÓMICO: ${document.getElementById('equipoEco').value.toUpperCase()}`, 80, 59);
-    doc.text(`SERIE: ${document.getElementById('equipoSerie').value.toUpperCase()}`, 15, 66);
-    doc.text(`FOLIO: ${document.getElementById('folioVale').value}`, 160, 45);
-    doc.text(`FECHA/HORA: ${new Date().toLocaleString()}`, 145, 52);
+    doc.text(`TÉCNICO: ${document.getElementById('tecnicoNombre').value.toUpperCase()}`, 15, 37);
+    doc.text(`SUPERVISOR: ${document.getElementById('supervisorNombre').value.toUpperCase()}`, 15, 44);
+    doc.text(`MARCA: ${document.getElementById('equipoMarca').value.toUpperCase()}`, 15, 51);
+    doc.text(`ECONÓMICO: ${document.getElementById('equipoEco').value.toUpperCase()}`, 80, 51);
+    doc.text(`SERIE: ${document.getElementById('equipoSerie').value.toUpperCase()}`, 15, 58);
+    doc.text(`FOLIO: ${document.getElementById('folioVale').value}`, 160, 37);
+    doc.text(`FECHA/HORA: ${new Date().toLocaleString()}`, 145, 44);
 
     // Extraer filas de la tabla
     const rows = Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => [
@@ -326,29 +325,30 @@ window.exportarPDF = async function () {
         tr.querySelector('.code-field').value.toUpperCase()
     ]);
 
-    // --- OPCIÓN 1: REDUCCIÓN DINÁMICA SEGÚN CANTIDAD DE ARTÍCULOS ---
-    let tamanoFuente = 9;
+    // --- REDUCCIÓN DINÁMICA SEGÚN CANTIDAD DE ARTÍCULOS ---
+    let tamanoFuente = 10;
     let rellenoCelda = 4;
 
-    if (rows.length > 15) {
-        tamanoFuente = 7.5; // Límite legible para vales con muchos artículos
+    if (rows.length > 20) {
+        tamanoFuente = 8;
         rellenoCelda = 1.5;
-    } else if (rows.length > 8) {
-        tamanoFuente = 8;   // Tamaño medio
-        rellenoCelda = 2.5;
+    } else if (rows.length > 12) {
+        tamanoFuente = 9;
+        rellenoCelda = 3;
     }
 
     // Renderizar la tabla con las propiedades calculadas
     doc.autoTable({
-        startY: 75,
+        startY: 63,
         head: [['CANT', 'DESCRIPCIÓN', 'CÓDIGO']],
         body: rows,
-        headStyles: { fillColor: [30, 30, 30], textColor: [164, 198, 57] },
-        styles: { fontSize: tamanoFuente, cellPadding: rellenoCelda }
+        headStyles: { fillColor: [20, 20, 20], textColor: [164, 198, 57] },
+        styles: { fontSize: tamanoFuente, cellPadding: rellenoCelda },
+        margin: { top: 15, bottom: 40, left: 15, right: 15 } // Margen para evitar colisiones
     });
 
-    // Punto donde termina la tabla
-    let fY = doc.lastAutoTable.finalY + 10;
+    // Punto donde termina la tabla en la página actual
+    let fY = doc.lastAutoTable.finalY + 6;
 
     // --- NOTAS INTELIGENTES ---
     const notas = document.getElementById('notesArea').innerText;
@@ -357,23 +357,23 @@ window.exportarPDF = async function () {
         doc.setFontSize(8);
         const splitNotas = doc.splitTextToSize(`NOTAS: ${notas.toUpperCase()}`, 180);
 
-        // Si las notas rebasan el límite de seguridad (230 mm), abrimos nueva página
-        if (fY + (splitNotas.length * 4) > 230) {
+        // Si las notas exceden el límite seguro de la página (245 mm)
+        if (fY + (splitNotas.length * 4) > 245) {
             doc.addPage();
             fY = 25;
         }
         doc.text(splitNotas, 15, fY);
-        fY += (splitNotas.length * 4) + 10;
+        fY += (splitNotas.length * 4) + 6;
     }
 
     // --- POSICIONAMIENTO Y FIRMAS SEGURAS ---
-    // Si el contenido superó los 230 mm de alto, las firmas van a una segunda hoja limpia
-    if (fY > 230) {
+    // Si la tabla/notas terminan más abajo de 245 mm, las firmas pasan a la siguiente página
+    if (fY > 245) {
         doc.addPage();
-        fY = 235;
+        fY = 50; // Posición limpia en la parte superior de la nueva página
     } else {
-        // Si hay espacio, anclamos las firmas al pie de página (mínimo en Y = 235 mm)
-        fY = Math.max(fY + 10, 235);
+        // Si caben en la primera página, se anclan al fondo (mínimo Y = 250 mm)
+        fY = Math.max(fY + 8, 250);
     }
 
     // Dibujo de las líneas y rótulos de firma
