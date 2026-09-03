@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somsi - Vale de Salida</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+
+    <div class="main-container" id="app-container">
+        <!-- Selector de Vales (No se imprimirá) -->
+        <div class="nav-vales no-print">
+            <a href="index.html" class="tarjeta-nav">
+                <span class="icon">📤</span>
+                <div class="tarjeta-texto">
+                    <h4>Vale de Salida</h4>
+                    <p>Entregar refacciones</p>
+                </div>
+            </a>
+            <a href="devolucion.html" class="tarjeta-nav activa"> <!-- CLASE ACTIVA AQUÍ -->
+                <span class="icon">📥</span>
+                <div class="tarjeta-texto">
+                    <h4>Vale de Devolución</h4>
+                    <p>Reingresar al sistema</p>
+                </div>
+            </a>
+        </div>
+        <header class="section header">
+            <div class="logo-area">
+                <img src="assets/logo.png" alt="Logo" class="logo-img" onerror="this.style.opacity='0'">
+                <div>
+                    <h2>SOMSI S.A. DE C.V.</h2>
+                    <p class="tagline">Devolución de Refacciones</p>
+                </div>
+            </div>
+            <div class="info-area">
+                <div class="input-group">
+                    <label>Folio:</label>
+                    <input type="text" id="folioVale" placeholder="Cargando..." readonly>
+                </div>
+            </div>
+        </header>
+
+        <section class="section grid-3">
+            <!-- Asegúrate de que el CSS soporte 3 columnas, o déjalo en grid-2 y se acomodará abajo -->
+            <div class="input-group">
+                <label>ID Vale Xoftmaq:</label>
+                <input type="number" id="idTerceros" placeholder="Ej. 10458">
+            </div>
+            <div class="input-group">
+                <label>Técnico que devuelve:</label>
+                <input type="text" id="tecnicoNombre" placeholder="Nombre completo">
+            </div>
+            <div class="input-group">
+                <label>Recibe / Autoriza:</label>
+                <input type="text" id="supervisorNombre" placeholder="Nombre de quien recibe">
+            </div>
+        </section>
+
+        <section class="section">
+            <h3>Especificaciones del Equipo</h3>
+            <div class="grid-3">
+                <div class="input-group">
+                    <label>Marca:</label>
+                    <input type="text" id="equipoMarca" placeholder="Ej. CLARK">
+                </div>
+                <div class="input-group">
+                    <label>Nº Económico:</label>
+                    <input type="text" id="equipoEco" placeholder="Ej. 207">
+                </div>
+                <div class="input-group">
+                    <label>Nº de Serie:</label>
+                    <input type="text" id="equipoSerie" placeholder="Ej. 12345ABC">
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h3>Refacciones Solicitadas</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Cant.</th>
+                            <th>Descripción</th>
+                            <th style="width: 25%;">Código/Parte</th>
+                            <th class="no-print" style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody"></tbody>
+                </table>
+            </div>
+            <button class="btn-add no-print" onclick="addRow()">+ Agregar Fila</button>
+        </section>
+
+        <section class="section">
+            <label>Notas / Observaciones:</label>
+            <div id="notesArea" contenteditable="true" class="textarea-mock"></div>
+        </section>
+
+        <div class="actions no-print">
+            <button class="btn-pdf" onclick="procesarVale()">GENERAR PDF Y GUARDAR</button>
+            <button class="btn-history" onclick="toggleHistorial()">HISTORIAL</button>
+            <button class="btn-new" onclick="nuevoVale()">NUEVO VALE</button>
+        </div>
+
+        <div id="modalHistorial" class="modal">
+            <!-- MODAL DE HISTORIAL (Modificado) -->
+            <div id="modalHistorial" class="modal-overlay">
+                <div class="modal-content" style="max-width: 850px;">
+
+                    <!-- ENCABEZADO CON EL NUEVO BOTÓN -->
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="margin:20px; color:#1e1e1e;">Historial de Vales</h2>
+
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <!-- BOTÓN NUEVO DENTRO DEL HISTORIAL -->
+                            <button type="button" onclick="window.toggleModalResumen()"
+                                style="background:#a4c639; color:#fff; border:none; padding:6px 12px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+                                Resumen por...
+                            </button>
+                            <button onclick="window.toggleHistorial()"
+                                style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+                        </div>
+                    </div>
+
+                    <!-- Buscador por Económico existente -->
+                    <div style="margin-bottom: 15px;">
+                        <input type="text" id="busquedaEco" onkeyup="window.filtrarHistorial()"
+                            placeholder="🔍 Buscar por Económico..."
+                            style="width:100%; padding:8px; box-sizing:border-box;">
+                    </div>
+
+                    <!-- Tabla de historial -->
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
+                                    <th style="padding:8px;">FECHA</th>
+                                    <th style="padding:8px;">FOLIO</th>
+                                    <th style="padding:8px;">ECONÓMICO</th>
+                                    <th style="padding:8px;">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historialBody">
+                                <!-- Filas cargadas dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- MODAL DE RESUMEN POR TÉCNICO (Con z-index: 1100 para sobreponerse) -->
+            <div id="modalResumenTecnico"
+                style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;">
+                <div
+                    style="background:#fff; width:90%; max-width:750px; max-height:90vh; overflow-y:auto; padding:20px; border-radius:8px; position:relative;">
+
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px;">
+                        <h3 style="margin:0; color:#1e1e1e;">📊 Reporte y Resumen de Consumos</h3>
+                        <button onclick="window.toggleModalResumen()"
+                            style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+                    </div>
+
+                    <!-- FILTROS MULTIPLES (TODOS OPCIONALES) -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold;">TÉCNICO:</label>
+                            <input type="text" id="filtroTecnicoNombre" placeholder="Todos o nombre..."
+                                style="width:100%; padding:6px; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold;">UNIDAD / ECONÓMICO:</label>
+                            <input type="text" id="filtroUnidadEco" placeholder="Todos o económico..."
+                                style="width:100%; padding:6px; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold;">FECHA INICIO:</label>
+                            <input type="date" id="filtroFechaInicio"
+                                style="width:100%; padding:6px; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold;">FECHA FIN:</label>
+                            <input type="date" id="filtroFechaFin"
+                                style="width:100%; padding:6px; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <div style="text-align:right; margin-bottom:20px;">
+                        <button id="btnGenerarReporte" onclick="window.generarResumen()"
+                            style="background:#a4c639; color:#fff; border:none; padding:8px 20px; font-weight:bold; cursor:pointer; border-radius:4px;">
+                            🔍 GENERAR REPORTE
+                        </button>
+                    </div>
+
+                    <!-- CONTENEDOR DE RESULTADOS -->
+                    <div id="resultadoResumen" style="display:none;">
+                        <!-- Tarjetas con métricas -->
+                        <div style="display:flex; gap:15px; margin-bottom:15px;">
+                            <div
+                                style="flex:1; background:#f4f4f4; padding:10px; border-radius:5px; text-align:center;">
+                                <span style="font-size:0.8rem; color:#666;">Vales Coincidentes</span>
+                                <h3 id="statTotalVales" style="margin:5px 0 0 0; color:#1e1e1e;">0</h3>
+                            </div>
+                            <div
+                                style="flex:1; background:#f4f4f4; padding:10px; border-radius:5px; text-align:center;">
+                                <span style="font-size:0.8rem; color:#666;">Piezas Totales</span>
+                                <h3 id="statTotalPiezas" style="margin:5px 0 0 0; color:#a4c639;">0</h3>
+                            </div>
+                        </div>
+
+                        <!-- Datos secundarios opcionales -->
+                        <div
+                            style="font-size:0.85rem; color:#555; background:#fafafa; padding:10px; border-radius:5px; margin-bottom:15px;">
+                            <p style="margin:2px 0;"><strong>Técnico(s):</strong> <span id="statTecnicos">--</span></p>
+                            <p style="margin:2px 0;"><strong>Equipos / Económicos:</strong> <span
+                                    id="statEquipos">--</span></p>
+                        </div>
+
+                        <!-- Tabla de Consumos Agrupados -->
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
+                                    <th style="padding:8px;">CÓDIGO</th>
+                                    <th style="padding:8px;">DESCRIPCIÓN REFACCIÓN</th>
+                                    <th style="padding:8px; text-align:center;">CANT. TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaResumenBody"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Contenedor para editar/agregar al vale -->
+            <div id="seccion-edicion-vale" style="display: none;">
+                <h2>Vale de Salida - Folio: <span id="folio-display"></span></h2>
+
+                <!-- Aquí se inyectarán los artículos que YA existen (No editables) -->
+                <div id="articulos-existentes">
+                    <h4>Artículos ya registrados (Protegidos)</h4>
+                    <div id="lista-existentes"></div>
+                </div>
+
+                <hr>
+
+                <!-- Aquí se inyectarán los campos para los NUEVOS artículos -->
+                <div id="articulos-nuevos">
+                    <h4>Agregar nuevos artículos</h4>
+                    <div id="lista-nuevos"></div>
+                    <button type="button" id="btn-agregar-fila" onclick="agregarFilaNueva()">+ Añadir otra fila</button>
+                </div>
+
+                <button type="button" id="btn-guardar" onclick="guardarNuevosArticulos()">Guardar Nuevos
+                    Artículos</button>
+            </div>
+
+
+            <script type="module">
+                // 1. Importaciones (Asegúrate de que setDoc esté aquí)
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+                import {
+                    getFirestore,
+                    collection,
+                    addDoc,
+                    getDocs,
+                    query,
+                    orderBy,
+                    limit,
+                    doc,
+                    getDoc,
+                    setDoc,     // <-- Primera verificación
+                    deleteDoc,
+                    runTransaction
+                } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
+                    authDomain: "db-somsi-vales.firebaseapp.com",
+                    projectId: "db-somsi-vales",
+                    storageBucket: "db-somsi-vales.firebasestorage.app",
+                    messagingSenderId: "570162244882",
+                    appId: "1:570162244882:web:028488d3dab042d5d897cb"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+
+                // 2. Exportar a global (Aquí es donde script.js lo toma)
+                window.db = db;
+                window.dbFuncs = {
+                    collection,
+                    addDoc,
+                    getDocs,
+                    query,
+                    orderBy,
+                    limit,
+                    doc,
+                    getDoc,
+                    setDoc,     // <-- Segunda verificación: ¡Esto es vital!
+                    deleteDoc,
+                    runTransaction
+                };
+            </script>
+            <script src="js/script-devolucion.js"></script>
+</body>
+
+</html>

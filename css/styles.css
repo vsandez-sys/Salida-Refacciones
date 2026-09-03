@@ -415,3 +415,66 @@ button:active {
     padding: 8px;
     border-radius: 4px;
 }
+/* --- NAVEGACIÓN DE VALES (TARJETAS) --- */
+.nav-vales {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tarjeta-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    max-width: 260px;
+}
+
+.tarjeta-nav:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.tarjeta-nav .icon {
+    font-size: 1.8rem;
+}
+
+.tarjeta-texto h4 {
+    margin: 0 0 3px 0;
+    font-size: 1rem;
+}
+
+.tarjeta-texto p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* Estado activo (Vale actual) */
+.tarjeta-nav.activa {
+    background: #1e1e1e; /* Gris oscuro de tu paleta */
+    border-color: #1e1e1e;
+    color: #a4c639; /* Tu verde característico */
+    pointer-events: none; /* Evita que le den clic si ya están ahí */
+}
+
+.tarjeta-nav.activa .tarjeta-texto p {
+    color: #cccccc;
+}
+
+/* Seguridad para impresión nativa */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
