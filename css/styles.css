@@ -478,3 +478,81 @@ button:active {
         display: none !important;
     }
 }
+
+/* --- NAVEGACIÓN DE VALES (TARJETAS RESPONSIVAS) --- */
+.nav-vales {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tarjeta-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease-in-out;
+    flex: 1;                 /* Permite que se distribuyan equitativamente */
+    min-width: 140px;        /* Asegura que no se squencen demasiado en celulares chicos */
+    max-width: 260px;
+    box-sizing: border-box;
+}
+
+.tarjeta-nav:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.tarjeta-nav .icon {
+    font-size: 1.5rem;
+}
+
+.tarjeta-texto h4 {
+    margin: 0 0 2px 0;
+    font-size: 0.9rem;
+}
+
+.tarjeta-texto p {
+    margin: 0;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+/* Estado activo (Vale actual) */
+.tarjeta-nav.activa {
+    background: #1e1e1e; 
+    border-color: #1e1e1e;
+    color: #a4c639; 
+    pointer-events: none; 
+}
+
+.tarjeta-nav.activa .tarjeta-texto p {
+    color: #cccccc;
+}
+
+/* Media Query específica para celulares muy estrechos */
+@media (max-width: 480px) {
+    .nav-vales {
+        flex-direction: column; /* Se apilan uno debajo del otro en pantallas chicas */
+    }
+    .tarjeta-nav {
+        max-width: 100%;       /* Ocupan todo el ancho disponible del celular */
+    }
+}
+
+/* Seguridad para impresión nativa */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
