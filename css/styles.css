@@ -1,13 +1,33 @@
-/* --- SOMSI PRO: UNIFIED MODERN INTERFACE --- */
+/* --- SOMSI Hoja de Estilos (Versión Depurada) --- */
 :root {
     --verde: #A4C639;
     --verde-hover: #8eb32f;
+    --naranja: #e67e22;
     --gris-dark: #1e1e1e;
     --gris-light: #f8f9fa;
     --gris-border: #ced4da;
     --blanco: #ffffff;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.25s ease-in-out;
+
+    /* Variables de Tema */
+    --bg-body: #f4f4f9;
+    --bg-container: #ffffff;
+    --text-color: #1e1e1e;
+    --border-color: #ddd;
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --focus-bg: #fbfcfa;
+}
+
+[data-theme="dark"] {
+    --bg-body: #121212;
+    --bg-container: #1e1e1e;
+    --text-color: #e0e0e0;
+    --border-color: #333333;
+    --card-bg: #2a2a2a;
+    --input-bg: #2b2b2b;
+    --focus-bg: #333333;
 }
 
 * {
@@ -18,15 +38,16 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background-color: #f3f4f6;
-    color: #333;
+    background-color: var(--bg-body);
+    color: var(--text-color);
     padding: 20px 10px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .main-container {
     max-width: 900px;
     margin: 20px auto;
-    background: var(--blanco);
+    background: var(--bg-container);
     padding: 35px;
     border-radius: 12px;
     box-shadow: var(--shadow);
@@ -39,7 +60,7 @@ body {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--gris-light);
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 20px;
     margin-bottom: 25px;
     gap: 15px;
@@ -59,7 +80,7 @@ body {
 
 .logo-area h2 {
     font-size: 1.4rem;
-    color: var(--gris-dark);
+    color: var(--text-color);
 }
 
 .tagline {
@@ -68,7 +89,53 @@ body {
     font-weight: 500;
 }
 
-/* Grids Dinámicos */
+/* Navegación de Vales */
+.nav-vales {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.tarjeta-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: var(--transition);
+    flex: 1;
+    min-width: 140px;
+    max-width: 260px;
+}
+
+.tarjeta-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tarjeta-nav.activa {
+    background: var(--gris-dark);
+    border-color: var(--gris-dark);
+    color: var(--verde);
+    pointer-events: none;
+}
+
+.tarjeta-nav.nav-bloqueada {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Grids Dinámicos y Secciones */
 .grid-2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -83,17 +150,31 @@ body {
     margin-bottom: 20px;
 }
 
+.section:not(.header) {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--verde);
+}
+
+.tema-devolucion .section:not(.header) {
+    border-left-color: var(--naranja);
+}
+
 .section h3 {
     font-size: 1.05rem;
     text-transform: uppercase;
-    color: var(--gris-dark);
+    color: var(--text-color);
     margin-bottom: 15px;
-    border-left: 4px solid var(--verde);
-    padding-left: 10px;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 8px;
     letter-spacing: 0.5px;
 }
 
-/* Formularios y Campos */
+/* Formularios e Inputs */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -102,31 +183,41 @@ body {
 .input-group label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #495057;
+    color: var(--text-color);
     margin-bottom: 6px;
     text-transform: uppercase;
 }
 
 input[type="text"],
 input[type="number"],
+input[type="date"],
 .textarea-mock {
     width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--gris-border);
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    background: var(--gris-light);
+    background-color: var(--input-bg);
+    color: var(--text-color);
     font-size: 0.95rem;
-    color: #212529;
     transition: var(--transition);
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
+input[type="date"]:focus,
 .textarea-mock:focus {
     outline: none;
     border-color: var(--verde);
-    background: var(--blanco);
     box-shadow: 0 0 0 3px rgba(164, 198, 57, 0.25);
+    background-color: var(--focus-bg);
+}
+
+.tema-devolucion input[type="text"]:focus,
+.tema-devolucion input[type="number"]:focus,
+.tema-devolucion input[type="date"]:focus,
+.tema-devolucion .textarea-mock:focus {
+    border-color: var(--naranja);
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.25);
 }
 
 input#folioVale {
@@ -140,16 +231,13 @@ input#folioVale {
 
 .textarea-mock {
     min-height: 90px;
-    background: var(--blanco);
-    border: 1px solid var(--gris-border);
-    padding: 12px;
 }
 
-/* Tablas Modernas */
+/* Tablas */
 .table-container {
     overflow-x: auto;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     margin: 15px 0;
 }
 
@@ -165,16 +253,34 @@ th {
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 td {
     padding: 10px 14px;
-    border-bottom: 1px solid #edf2f7;
-    background: var(--blanco);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-container);
 }
 
-/* Botones de acción */
+@keyframes aparecerFila {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fila-item-nueva, .fila-item-existente {
+    animation: aparecerFila 0.25s ease-out forwards;
+}
+
+#itemsBody:empty::after {
+    content: "📋 No hay refacciones agregadas. Presiona Enter para agregar una fila.";
+    display: block;
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* Botones y Acciones */
 .actions {
     display: flex;
     flex-wrap: wrap;
@@ -182,32 +288,37 @@ td {
     margin-top: 30px;
 }
 
-button {
-    padding: 14px 24px;
+button, .btn-pdf, .btn-history, .btn-excel, .btn-theme-toggle, .btn-cargar {
+    padding: 12px 20px;
     border: none;
     border-radius: 6px;
-    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 button:active {
-    transform: scale(0.98);
+    transform: translateY(1px);
 }
 
 .btn-pdf {
-    background: var(--gris-dark);
-    color: var(--verde);
+    background-color: var(--verde);
+    color: var(--gris-dark);
     flex: 2;
     min-width: 200px;
 }
 
-.btn-pdf:hover {
-    background: #2d2d2d;
+.tema-devolucion .btn-pdf {
+    background-color: var(--naranja);
     color: var(--blanco);
 }
 
@@ -217,33 +328,49 @@ button:active {
     flex: 1;
 }
 
-.btn-history:hover {
-    background: #2d3748;
+.btn-excel {
+    background: #107c41;
+    color: white;
 }
 
-.btn-new {
-    background: var(--verde);
-    color: var(--gris-dark);
-    flex: 1;
+.btn-theme-toggle {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
 }
 
-.btn-new:hover {
-    background: var(--verde-hover);
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
 }
 
-.btn-add {
-    background: #e2e8f0;
-    color: #4a5568;
-    margin-top: 8px;
-    padding: 8px 16px;
-    font-size: 0.85rem;
+.toast {
+    min-width: 260px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: var(--blanco);
+    font-weight: bold;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    animation: slideInToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-.btn-add:hover {
-    background: #cbd5e1;
+.toast.exito { background: #2e7d32; border-left: 6px solid var(--verde); }
+.toast.error { background: #c62828; border-left: 6px solid #ff5252; }
+.toast.advertencia { background: #ef6c00; border-left: 6px solid #ffb74d; }
+
+@keyframes slideInToast {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
-/* Ventana Modal Historial */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -258,12 +385,10 @@ button:active {
     justify-content: center;
 }
 
-.modal.active {
-    display: flex;
-}
+.modal.active { display: flex; }
 
 .modal-content {
-    background: var(--blanco);
+    background: var(--bg-container);
     width: 95%;
     max-width: 750px;
     border-radius: 12px;
@@ -271,20 +396,6 @@ button:active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    animation: popIn 0.25s ease-out;
-}
-
-@keyframes popIn {
-    from {
-        transform: scale(0.95);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
 }
 
 .modal-header {
@@ -297,60 +408,41 @@ button:active {
 .modal-body {
     padding: 24px;
     overflow-y: auto;
-    flex-grow: 1;
 }
 
-#busquedaEco {
-    margin-bottom: 20px;
-    border: 2px solid var(--verde);
-    padding: 12px;
-    border-radius: 8px;
+/* Adaptaciones Móviles */
+/* Tablets y Celulares (<= 768px) */
+@media (max-width: 768px) {
+    .actions {
+        position: sticky;
+        bottom: 15px;
+        background: var(--bg-container);
+        padding: 14px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        z-index: 100;
+        border: 1px solid var(--border-color);
+    }
+
+    #historialBody tr.fila-historial {
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    #historialBody tr.fila-historial td {
+        display: flex;
+        justify-content: space-between;
+        border: none !important;
+        padding: 4px 0 !important;
+    }
 }
 
-.btn-cargar {
-    background: var(--verde);
-    color: var(--gris-dark);
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-.btn-cargar:hover {
-    background: var(--verde-hover);
-}
-
-.btn-del-mini {
-    background: #fff5f5;
-    color: #e53e3e;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 1rem;
-    border: 1px solid #fed7d7;
-}
-
-.btn-del-mini:hover {
-    background: #e53e3e;
-    color: white;
-}
-
-.modal-footer {
-    padding: 15px 24px;
-    background: var(--gris-light);
-    text-align: right;
-    border-top: 1px solid #edf2f7;
-}
-
-.btn-close {
-    background: #cbd5e1;
-    color: #334155;
-    padding: 10px 20px;
-}
-
-.btn-close:hover {
-    background: #94a3b8;
-}
-
-/* Responsivo para móviles */
+/* Celulares Estándar (<= 680px) */
 @media (max-width: 680px) {
     .main-container {
         padding: 20px;
@@ -370,484 +462,98 @@ button:active {
         flex-direction: column;
     }
 
-    button {
+    button, .btn-pdf, .btn-history, .btn-new {
         width: 100%;
     }
 }
 
-/* Botón Excel */
-.btn-excel {
-    background: #107c41;
-    /* Verde característico de Excel */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-excel:hover {
-    background: #0c5e31 !important;
-}
-
-.btn-excel:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-}
-
-/* Estilo para los campos que ya están en la base de datos */
-.item-bloqueado {
-    background-color: #e9ecef;
-    color: #6c757d;
-    border: 1px solid #ced4da;
-    pointer-events: none;
-    /* Evita que el usuario haga clic o edite */
-    user-select: none;
-}
-
-.fila-articulo {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.fila-articulo input {
-    padding: 8px;
-    border-radius: 4px;
-}
-
-/* --- NAVEGACIÓN DE VALES (TARJETAS) --- */
-.nav-vales {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.tarjeta-nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    background: #f4f4f4;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #333;
-    transition: all 0.2s ease-in-out;
-    width: 100%;
-    max-width: 260px;
-}
-
-.tarjeta-nav:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tarjeta-nav .icon {
-    font-size: 1.8rem;
-}
-
-.tarjeta-texto h4 {
-    margin: 0 0 3px 0;
-    font-size: 1rem;
-}
-
-.tarjeta-texto p {
-    margin: 0;
-    font-size: 0.75rem;
-    color: #666;
-}
-
-/* Estado activo (Vale actual) */
-.tarjeta-nav.activa {
-    background: #1e1e1e;
-    /* Gris oscuro de tu paleta */
-    border-color: #1e1e1e;
-    color: #a4c639;
-    /* Tu verde característico */
-    pointer-events: none;
-    /* Evita que le den clic si ya están ahí */
-}
-
-.tarjeta-nav.activa .tarjeta-texto p {
-    color: #cccccc;
-}
-
-/* Seguridad para impresión nativa */
-@media print {
-    .no-print {
-        display: none !important;
-    }
-}
-
-/* --- NAVEGACIÓN DE VALES (TARJETAS RESPONSIVAS) --- */
-.nav-vales {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.tarjeta-nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    background: #f4f4f4;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #333;
-    transition: all 0.2s ease-in-out;
-    flex: 1;
-    /* Permite que se distribuyan equitativamente */
-    min-width: 140px;
-    /* Asegura que no se squencen demasiado en celulares chicos */
-    max-width: 260px;
-    box-sizing: border-box;
-}
-
-.tarjeta-nav:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tarjeta-nav .icon {
-    font-size: 1.5rem;
-}
-
-.tarjeta-texto h4 {
-    margin: 0 0 2px 0;
-    font-size: 0.9rem;
-}
-
-.tarjeta-texto p {
-    margin: 0;
-    font-size: 0.7rem;
-    color: #666;
-}
-
-/* Estado activo (Vale actual) */
-.tarjeta-nav.activa {
-    background: #1e1e1e;
-    border-color: #1e1e1e;
-    color: #a4c639;
-    pointer-events: none;
-}
-
-.tarjeta-nav.activa .tarjeta-texto p {
-    color: #cccccc;
-}
-
-/* Media Query específica para celulares muy estrechos */
+/* Celulares Estrechos (<= 480px) */
 @media (max-width: 480px) {
     .nav-vales {
         flex-direction: column;
-        /* Se apilan uno debajo del otro en pantallas chicas */
     }
 
     .tarjeta-nav {
         max-width: 100%;
-        /* Ocupan todo el ancho disponible del celular */
+        width: 100%;
     }
 }
 
 /* Seguridad para impresión nativa */
 @media print {
-    .no-print {
+    .no-print { 
+        display: none !important; 
+    }
+}
+
+/* =========================================
+   CORRECCIÓN INTEGRAL DE MODAL DE HISTORIAL EN MÓVIL
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. Modal a pantalla completa para evitar saltos por teclado o barra del navegador */
+    .modal {
+        padding: 0 !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        height: 100dvh !important; /* dvh se adapta al alto real dinámico del celular */
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+    }
+
+    .modal-body {
+        padding: 15px !important;
+    }
+
+    /* 2. Ocultar los encabezados de tabla (thead) que estorban en móvil */
+    #modalHistorial table thead,
+    .modal table thead {
         display: none !important;
     }
-}
 
-/* --- TARJETAS DE NAVEGACIÓN BLOQUEADAS AL ESCRIBIR --- */
-.tarjeta-nav.nav-bloqueada {
-    opacity: 0.4;
-    cursor: not-allowed;
-    filter: grayscale(100%);
-    box-shadow: none !important;
-    transform: none !important;
-}
-
-/* --- VARIABLES DE TEMA (CLARO Y OSCURO) --- */
-:root {
-    --bg-body: #f4f4f9;
-    --bg-container: #ffffff;
-    --text-color: #1e1e1e;
-    --border-color: #ddd;
-    --card-bg: #f4f4f4;
-    --input-bg: #ffffff;
-}
-
-[data-theme="dark"] {
-    --bg-body: #121212;
-    --bg-container: #1e1e1e;
-    --text-color: #e0e0e0;
-    --border-color: #333333;
-    --card-bg: #2a2a2a;
-    --input-bg: #2b2b2b;
-}
-
-/* Aplicación global de variables de tema */
-body {
-    background-color: var(--bg-body) !important;
-    color: var(--text-color) !important;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.main-container, .modal-content {
-    background-color: var(--bg-container) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-color) !important;
-}
-
-input[type="text"], input[type="number"], input[type="date"], .textarea-mock {
-    background-color: var(--input-bg) !important;
-    color: var(--text-color) !important;
-    border-color: var(--border-color) !important;
-}
-
-/* --- CONTENEDOR DE NOTIFICACIONES TOAST --- */
-#toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 9999;
-}
-
-.toast {
-    min-width: 260px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: bold;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    animation: slideInToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.toast.exito { background: #2e7d32; border-left: 6px solid #a4c639; }
-.toast.error { background: #c62828; border-left: 6px solid #ff5252; }
-.toast.advertencia { background: #ef6c00; border-left: 6px solid #ffb74d; }
-
-@keyframes slideInToast {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* Botón flotante para cambiar tema */
-.btn-theme-toggle {
-    background: var(--card-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    padding: 6px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: bold;
-    transition: all 0.2s ease;
-}
-
-/* =========================================
-   UX/UI MEJORAS - FASE 1: TARJETAS Y FOCUS
-   ========================================= */
-
-/* Transformar las secciones en tarjetas modulares flotantes, EXCLUYENDO el encabezado */
-.section:not(.header) {
-    background: var(--card-bg, #ffffff);
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border-color, #eaeaea);
-    border-left: 5px solid #a4c639; /* Acento verde característico de Somsi */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-
-/* Títulos de las tarjetas más limpios y separados */
-.section h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: var(--text-color, #1e1e1e);
-    font-weight: 600;
-    font-size: 1.1rem;
-    border-bottom: 1px dashed var(--border-color, #ddd);
-    padding-bottom: 10px;
-}
-
-/* Estilo base para los inputs con bordes suavizados */
-input[type="text"], 
-input[type="number"], 
-input[type="date"],
-.textarea-mock {
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    padding: 10px 12px;
-    transition: all 0.2s ease;
-}
-
-/* GLOW FOCUS: Efecto de iluminación y escala cuando el usuario escribe */
-input[type="text"]:focus, 
-input[type="number"]:focus, 
-input[type="date"]:focus,
-.textarea-mock:focus {
-    outline: none;
-    border-color: #a4c639;
-    box-shadow: 0 0 0 3.5px rgba(164, 198, 57, 0.25);
-    transform: scale(1.01);
-    background-color: #fbfcfa !important; /* Un tono súper ligero de verde al fondo */
-}
-
-/* --- VARIANTE NARANJA PARA VALES DE DEVOLUCIÓN --- */
-.tema-devolucion .section:not(.header) {
-    border-left-color: #e67e22; /* Franja Naranja */
-}
-
-/* Brillo naranja al escribir (exclusivo de devoluciones) */
-.tema-devolucion input[type="text"]:focus, 
-.tema-devolucion input[type="number"]:focus, 
-.tema-devolucion input[type="date"]:focus,
-.tema-devolucion .textarea-mock:focus {
-    border-color: #e67e22 !important;
-    box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.3) !important;
-}
-
-/* =========================================
-   UX/UI MEJORAS - Fase 2: Botones y Micro-Interacciones
-   ========================================= */
-
-/* Estilo moderno y unificado para los botones de acción */
-.btn-pdf, .btn-history, .btn-excel, .btn-theme-toggle, .btn-cargar, .btn-del-mini {
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border: none;
-}
-
-/* Efecto de elevación sutil al pasar el mouse (Hover) */
-.btn-pdf:hover, .btn-history:hover, .btn-excel:hover, .btn-theme-toggle:hover, .btn-cargar:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    filter: brightness(1.05);
-}
-
-/* Efecto de presionado físico (Active) */
-.btn-pdf:active, .btn-history:active, .btn-excel:active, .btn-theme-toggle:active, .btn-cargar:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.255);
-    filter: brightness(0.95);
-}
-
-/* Identidad de color automática para el botón principal (PDF / Guardar) */
-.btn-pdf {
-    background-color: #7f7f7f !important;
-    color: #1e1e1e !important;
-}
-
-.tema-devolucion .btn-pdf {
-    background-color: #e67e22 !important; /* Naranja en el vale de devolución */
-    color: #ffffff !important;
-}
-
-/* =========================================
-   UX/UI MEJORAS - Fase 3: Estados Vacíos y Animación de Filas
-   ========================================= */
-
-/* Animación de entrada fluida para nuevas filas */
-@keyframes aparecerFila {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
+    #modalHistorial table, 
+    #modalHistorial tbody {
+        display: block !important;
+        width: 100% !important;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.fila-item-nueva, .fila-item-existente {
-    animation: aparecerFila 0.25s ease-out forwards;
-}
-
-/* Estilo para cuando la tabla está vacía o limpia */
-#itemsBody:empty::after {
-    content: "📋 No hay refacciones agregadas. Escribe en los campos o presiona Enter para agregar una fila.";
-    display: block;
-    text-align: center;
-    padding: 20px;
-    color: #888;
-    font-style: italic;
-    font-size: 0.9rem;
-}
-
-/* =========================================
-   UX/UI MEJORAS - Barra de Acciones Fija (Móvil)
-   ========================================= */
-@media (max-width: 768px) {
-    .actions {
-        position: sticky;
-        bottom: 15px;
-        background: var(--card-bg, #ffffff);
-        padding: 14px;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-        border-radius: 10px;
-        z-index: 100;
-        border: 1px solid var(--border-color, #ddd);
-        margin-top: 20px;
-    }
-}
-
-/* =========================================
-   UX/UI MEJORAS - Historial: Tarjetas solo en MÓVIL
-   ========================================= */
-
-/* En PC se mantiene como tabla normal por defecto */
-
-/* En celulares y tablets (menores a 768px) se convierte en tarjetas */
-@media (max-width: 768px) {
+    /* 3. Tarjetas independientes con sombras y mejor estructura */
     #historialBody tr.fila-historial {
-        display: flex;
-        flex-direction: column;
-        background: var(--card-bg, #fcfcfc);
-        border: 1px solid var(--border-color, #e0e0e0);
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        gap: 8px;
+        display: flex !important;
+        flex-direction: column !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        padding: 14px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+        gap: 6px !important;
     }
 
+    /* 4. Alineación de datos dentro de la tarjeta */
     #historialBody tr.fila-historial td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 2px 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         border: none !important;
+        padding: 4px 0 !important;
+        font-size: 0.9rem !important;
     }
 
+    /* 5. Zona de acciones separada y cómoda para el pulgar */
     #historialBody tr.fila-historial td:last-child {
-        margin-top: 4px;
-        padding-top: 8px !important;
-        border-top: 1px dashed var(--border-color, #eee) !important;
-        justify-content: flex-end;
-        gap: 10px;
+        margin-top: 8px !important;
+        padding-top: 10px !important;
+        border-top: 1px dashed var(--border-color) !important;
+        justify-content: flex-end !important;
+        gap: 12px !important;
+    }
+
+    /* Botones dentro del historial con mejor área de toque */
+    .btn-cargar, .btn-del-mini {
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+        min-height: 40px !important;
     }
 }
