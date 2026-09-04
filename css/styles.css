@@ -374,9 +374,11 @@ button:active {
         width: 100%;
     }
 }
+
 /* Botón Excel */
 .btn-excel {
-    background: #107c41; /* Verde característico de Excel */
+    background: #107c41;
+    /* Verde característico de Excel */
     color: white;
     padding: 10px 20px;
     border: none;
@@ -401,7 +403,8 @@ button:active {
     background-color: #e9ecef;
     color: #6c757d;
     border: 1px solid #ced4da;
-    pointer-events: none; /* Evita que el usuario haga clic o edite */
+    pointer-events: none;
+    /* Evita que el usuario haga clic o edite */
     user-select: none;
 }
 
@@ -415,6 +418,7 @@ button:active {
     padding: 8px;
     border-radius: 4px;
 }
+
 /* --- NAVEGACIÓN DE VALES (TARJETAS) --- */
 .nav-vales {
     display: flex;
@@ -442,7 +446,7 @@ button:active {
 .tarjeta-nav:hover {
     background: #e9ecef;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tarjeta-nav .icon {
@@ -462,10 +466,13 @@ button:active {
 
 /* Estado activo (Vale actual) */
 .tarjeta-nav.activa {
-    background: #1e1e1e; /* Gris oscuro de tu paleta */
+    background: #1e1e1e;
+    /* Gris oscuro de tu paleta */
     border-color: #1e1e1e;
-    color: #a4c639; /* Tu verde característico */
-    pointer-events: none; /* Evita que le den clic si ya están ahí */
+    color: #a4c639;
+    /* Tu verde característico */
+    pointer-events: none;
+    /* Evita que le den clic si ya están ahí */
 }
 
 .tarjeta-nav.activa .tarjeta-texto p {
@@ -501,8 +508,10 @@ button:active {
     text-decoration: none;
     color: #333;
     transition: all 0.2s ease-in-out;
-    flex: 1;                 /* Permite que se distribuyan equitativamente */
-    min-width: 140px;        /* Asegura que no se squencen demasiado en celulares chicos */
+    flex: 1;
+    /* Permite que se distribuyan equitativamente */
+    min-width: 140px;
+    /* Asegura que no se squencen demasiado en celulares chicos */
     max-width: 260px;
     box-sizing: border-box;
 }
@@ -510,7 +519,7 @@ button:active {
 .tarjeta-nav:hover {
     background: #e9ecef;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tarjeta-nav .icon {
@@ -530,10 +539,10 @@ button:active {
 
 /* Estado activo (Vale actual) */
 .tarjeta-nav.activa {
-    background: #1e1e1e; 
+    background: #1e1e1e;
     border-color: #1e1e1e;
-    color: #a4c639; 
-    pointer-events: none; 
+    color: #a4c639;
+    pointer-events: none;
 }
 
 .tarjeta-nav.activa .tarjeta-texto p {
@@ -543,10 +552,13 @@ button:active {
 /* Media Query específica para celulares muy estrechos */
 @media (max-width: 480px) {
     .nav-vales {
-        flex-direction: column; /* Se apilan uno debajo del otro en pantallas chicas */
+        flex-direction: column;
+        /* Se apilan uno debajo del otro en pantallas chicas */
     }
+
     .tarjeta-nav {
-        max-width: 100%;       /* Ocupan todo el ancho disponible del celular */
+        max-width: 100%;
+        /* Ocupan todo el ancho disponible del celular */
     }
 }
 
@@ -554,5 +566,288 @@ button:active {
 @media print {
     .no-print {
         display: none !important;
+    }
+}
+
+/* --- TARJETAS DE NAVEGACIÓN BLOQUEADAS AL ESCRIBIR --- */
+.tarjeta-nav.nav-bloqueada {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* --- VARIABLES DE TEMA (CLARO Y OSCURO) --- */
+:root {
+    --bg-body: #f4f4f9;
+    --bg-container: #ffffff;
+    --text-color: #1e1e1e;
+    --border-color: #ddd;
+    --card-bg: #f4f4f4;
+    --input-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg-body: #121212;
+    --bg-container: #1e1e1e;
+    --text-color: #e0e0e0;
+    --border-color: #333333;
+    --card-bg: #2a2a2a;
+    --input-bg: #2b2b2b;
+}
+
+/* Aplicación global de variables de tema */
+body {
+    background-color: var(--bg-body) !important;
+    color: var(--text-color) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.main-container, .modal-content {
+    background-color: var(--bg-container) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+input[type="text"], input[type="number"], input[type="date"], .textarea-mock {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* --- CONTENEDOR DE NOTIFICACIONES TOAST --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 260px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideInToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.toast.exito { background: #2e7d32; border-left: 6px solid #a4c639; }
+.toast.error { background: #c62828; border-left: 6px solid #ff5252; }
+.toast.advertencia { background: #ef6c00; border-left: 6px solid #ffb74d; }
+
+@keyframes slideInToast {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Botón flotante para cambiar tema */
+.btn-theme-toggle {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+/* =========================================
+   UX/UI MEJORAS - FASE 1: TARJETAS Y FOCUS
+   ========================================= */
+
+/* Transformar las secciones en tarjetas modulares flotantes, EXCLUYENDO el encabezado */
+.section:not(.header) {
+    background: var(--card-bg, #ffffff);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color, #eaeaea);
+    border-left: 5px solid #a4c639; /* Acento verde característico de Somsi */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+/* Títulos de las tarjetas más limpios y separados */
+.section h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--text-color, #1e1e1e);
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-bottom: 1px dashed var(--border-color, #ddd);
+    padding-bottom: 10px;
+}
+
+/* Estilo base para los inputs con bordes suavizados */
+input[type="text"], 
+input[type="number"], 
+input[type="date"],
+.textarea-mock {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 10px 12px;
+    transition: all 0.2s ease;
+}
+
+/* GLOW FOCUS: Efecto de iluminación y escala cuando el usuario escribe */
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+input[type="date"]:focus,
+.textarea-mock:focus {
+    outline: none;
+    border-color: #a4c639;
+    box-shadow: 0 0 0 3.5px rgba(164, 198, 57, 0.25);
+    transform: scale(1.01);
+    background-color: #fbfcfa !important; /* Un tono súper ligero de verde al fondo */
+}
+
+/* --- VARIANTE NARANJA PARA VALES DE DEVOLUCIÓN --- */
+.tema-devolucion .section:not(.header) {
+    border-left-color: #e67e22; /* Franja Naranja */
+}
+
+/* Brillo naranja al escribir (exclusivo de devoluciones) */
+.tema-devolucion input[type="text"]:focus, 
+.tema-devolucion input[type="number"]:focus, 
+.tema-devolucion input[type="date"]:focus,
+.tema-devolucion .textarea-mock:focus {
+    border-color: #e67e22 !important;
+    box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.3) !important;
+}
+
+/* =========================================
+   UX/UI MEJORAS - Fase 2: Botones y Micro-Interacciones
+   ========================================= */
+
+/* Estilo moderno y unificado para los botones de acción */
+.btn-pdf, .btn-history, .btn-excel, .btn-theme-toggle, .btn-cargar, .btn-del-mini {
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+/* Efecto de elevación sutil al pasar el mouse (Hover) */
+.btn-pdf:hover, .btn-history:hover, .btn-excel:hover, .btn-theme-toggle:hover, .btn-cargar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    filter: brightness(1.05);
+}
+
+/* Efecto de presionado físico (Active) */
+.btn-pdf:active, .btn-history:active, .btn-excel:active, .btn-theme-toggle:active, .btn-cargar:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.255);
+    filter: brightness(0.95);
+}
+
+/* Identidad de color automática para el botón principal (PDF / Guardar) */
+.btn-pdf {
+    background-color: #7f7f7f !important;
+    color: #1e1e1e !important;
+}
+
+.tema-devolucion .btn-pdf {
+    background-color: #e67e22 !important; /* Naranja en el vale de devolución */
+    color: #ffffff !important;
+}
+
+/* =========================================
+   UX/UI MEJORAS - Fase 3: Estados Vacíos y Animación de Filas
+   ========================================= */
+
+/* Animación de entrada fluida para nuevas filas */
+@keyframes aparecerFila {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fila-item-nueva, .fila-item-existente {
+    animation: aparecerFila 0.25s ease-out forwards;
+}
+
+/* Estilo para cuando la tabla está vacía o limpia */
+#itemsBody:empty::after {
+    content: "📋 No hay refacciones agregadas. Escribe en los campos o presiona Enter para agregar una fila.";
+    display: block;
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* =========================================
+   UX/UI MEJORAS - Barra de Acciones Fija (Móvil)
+   ========================================= */
+@media (max-width: 768px) {
+    .actions {
+        position: sticky;
+        bottom: 15px;
+        background: var(--card-bg, #ffffff);
+        padding: 14px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        z-index: 100;
+        border: 1px solid var(--border-color, #ddd);
+        margin-top: 20px;
+    }
+}
+
+/* =========================================
+   UX/UI MEJORAS - Historial: Tarjetas solo en MÓVIL
+   ========================================= */
+
+/* En PC se mantiene como tabla normal por defecto */
+
+/* En celulares y tablets (menores a 768px) se convierte en tarjetas */
+@media (max-width: 768px) {
+    #historialBody tr.fila-historial {
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg, #fcfcfc);
+        border: 1px solid var(--border-color, #e0e0e0);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        gap: 8px;
+    }
+
+    #historialBody tr.fila-historial td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2px 0 !important;
+        border: none !important;
+    }
+
+    #historialBody tr.fila-historial td:last-child {
+        margin-top: 4px;
+        padding-top: 8px !important;
+        border-top: 1px dashed var(--border-color, #eee) !important;
+        justify-content: flex-end;
+        gap: 10px;
     }
 }

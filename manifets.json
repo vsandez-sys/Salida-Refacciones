@@ -1,0 +1,21 @@
+{
+  "name": "SOMSI - Vales de Almacén",
+  "short_name": "SOMSI Vales",
+  "description": "Sistema de gestión de vales de salida y devolución para almacén",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1e1e1e",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

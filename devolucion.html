@@ -8,9 +8,21 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e1e">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('PWA lista e instalable.'))
+                    .catch(err => console.error('Error PWA:', err));
+            });
+        }
+    </script>
 </head>
 
-<body>
+<body class="tema-devolucion">
 
     <div class="main-container" id="app-container">
         <!-- Selector de Vales (No se imprimirá) -->

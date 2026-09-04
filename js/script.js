@@ -19,8 +19,9 @@ window.addRow = function () {
         <td><input type="number" class="cant-field" value="1"></td>
         <td><input type="text" class="desc-field" placeholder="Descripción..."></td>
         <td><input type="text" class="code-field" placeholder="Código..."></td>
-        <td class="no-print"><button onclick="this.parentElement.parentElement.remove()" class="btn-del" style="background:none;border:none;color:red;cursor:pointer;font-size:1.2rem;">×</button></td>
-    `;
+        <td class="no-print">
+    <button onclick="this.parentElement.parentElement.remove(); window.evaluarEstadoFormulario();" class="btn-del" style="background:none;border:none;color:red;cursor:pointer;font-size:1.2rem;">×</button>
+</td>`;
     tbody.appendChild(tr);
 
     // Obtener las celdas de esta fila recién creada
@@ -93,6 +94,13 @@ window.generarSiguienteFolio = async function () {
 window.procesarVale = async function () {
     const btn = document.querySelector('.btn-pdf');
     if (btn.disabled) return;
+    
+// --- VALIDACIÓN DE VALE VACÍO ---
+    window.evaluarEstadoFormulario(); // Reevalúa todos los campos
+    if (!formularioModificado) {
+        window.mostrarToast("⚠️ El vale está completamente vacío. Ingresa al menos un dato antes de guardar.", "advertencia");
+        return;
+    }
 
     btn.disabled = true;
     btn.innerText = "GUARDANDO...";
@@ -100,13 +108,14 @@ window.procesarVale = async function () {
     try {
         await window.guardarEnNube();
         await window.exportarPDF();
+        window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
         btn.innerText = "¡VALE GUARDADO!";
         setTimeout(() => {
             btn.disabled = false;
             btn.innerText = "GENERAR PDF Y GUARDAR";
         }, 3000);
     } catch (e) {
-        alert("Error al procesar: " + e.message);
+        window.mostrarToast("Error al procesar: " + e.message, "error");
         btn.disabled = false;
         btn.innerText = "REINTENTAR";
     }
@@ -230,6 +239,7 @@ window.cargarValeEnPantalla = function (docId, v) {
     }
 
     window.setModoLectura(true);
+    window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
     window.toggleHistorial();
 };
 
@@ -239,13 +249,13 @@ window.eliminarVale = async function (id) {
     try {
         await deleteDoc(doc(window.db, "vales", id));
         window.cargarHistorialDesdeNube();
-    } catch (e) { alert("Error al eliminar: " + e.message); }
+    } catch (e) { window.mostrarToast("Error al eliminar: " + e.message, "error"); }
 };
 
 // --- AGREGAR NUEVAS REFACCIONES A UN FOLIO EXISTENTE ---
 window.guardarNuevosArticulosEnFolio = async function () {
     if (!idDocumentoActual) {
-        alert("No hay ningún vale cargado para modificar.");
+        window.mostrarToast("No hay ningún vale cargado para modificar.", "advertencia");
         return;
     }
 
@@ -266,7 +276,7 @@ window.guardarNuevosArticulosEnFolio = async function () {
     });
 
     if (nuevosItems.length === 0) {
-        alert("Agrega al menos una nueva refacción en la tabla para guardar.");
+        window.mostrarToast("Agrega al menos una nueva refacción para guardar.", "advertencia");
         return;
     }
 
@@ -278,7 +288,7 @@ window.guardarNuevosArticulosEnFolio = async function () {
             items: arrayUnion(...nuevosItems)
         });
 
-        alert("¡Refacciones agregadas exitosamente al folio!");
+        window.mostrarToast("¡Refacciones agregadas exitosamente al folio!", "exito");
 
         // Recargar el documento para actualizar la pantalla
         const actualizado = await getDoc(docRef);
@@ -288,12 +298,18 @@ window.guardarNuevosArticulosEnFolio = async function () {
 
     } catch (e) {
         console.error("Error al actualizar el vale:", e);
-        alert("Error al actualizar el vale: " + e.message);
+        window.mostrarToast("Error al actualizar el vale: " + e.message, "error");
     }
 };
 
 /// --- PDF OPTIMIZADO CON REDUCCIÓN DINÁMICA Y MANEJO DE PÁGINAS ---
 window.exportarPDF = async function () {
+    // --- VALIDACIÓN DE VALE VACÍO ---
+    window.evaluarEstadoFormulario();
+    if (!formularioModificado) {
+        window.mostrarToast("⚠️ No puedes generar un PDF de un vale completamente vacío.", "advertencia");
+        return;
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF(); // Hoja A4 por defecto (210mm x 297mm)
 
@@ -406,6 +422,7 @@ window.nuevoVale = function () {
     window.addRow();
     window.setModoLectura(false);
     window.generarSiguienteFolio();
+    window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
 };
 
 window.setModoLectura = function (b) {
@@ -473,8 +490,7 @@ window.descargarExcel = async function () {
 
     } catch (e) {
         console.error("Error al exportar:", e);
-        alert("Hubo un problema al generar el archivo Excel.");
-        btn.innerText = "⬇️ Descargar Excel";
+       window.mostrarToast("Hubo un problema al generar el archivo Excel.", "error");
         btn.disabled = false;
     }
 };
@@ -614,8 +630,246 @@ window.generarResumen = async function () {
 
     } catch (e) {
         console.error("Error al generar resumen:", e);
-        alert("Error al procesar la información: " + e.message);
+        window.mostrarToast("Error al procesar la información: " + e.message, "error");
         btnBuscar.innerText = "🔍 GENERAR REPORTE";
         btnBuscar.disabled = false;
+    }
+};
+
+// --- SISTEMA DE PROTECCIÓN INTELIGENTE CONTRA PÉRDIDA DE DATOS ---
+let formularioModificado = false;
+
+// Evalúa en tiempo real si el formulario tiene contenido real o si ya se borró todo
+window.evaluarEstadoFormulario = function () {
+    // 1. Evaluar campos de texto del encabezado y equipo
+    const camposPrincipales = [
+        'tecnicoNombre',
+        'supervisorNombre',
+        'equipoMarca',
+        'equipoEco',
+        'equipoSerie',
+        'idTerceros' // Si existe en devoluciones
+    ];
+
+    const tieneCamposLlenos = camposPrincipales.some(id => {
+        const el = document.getElementById(id);
+        return el && el.value.trim() !== "";
+    });
+
+    // 2. Evaluar área de notas
+    const notesArea = document.getElementById('notesArea');
+    const tieneNotas = notesArea && notesArea.innerText.trim() !== "";
+
+    // 3. Evaluar refacciones ingresadas en la tabla
+    const filas = document.querySelectorAll('#itemsBody tr');
+    let tieneRefacciones = false;
+
+    filas.forEach(tr => {
+        const desc = tr.querySelector('.desc-field')?.value?.trim() || "";
+        const code = tr.querySelector('.code-field')?.value?.trim() || "";
+        const cant = tr.querySelector('.cant-field')?.value?.trim() || "1";
+
+        // Si escribió texto o cambió la cantidad por defecto (1)
+        if (desc !== "" || code !== "" || (cant !== "1" && cant !== "")) {
+            tieneRefacciones = true;
+        }
+    });
+
+    // El formulario está modificado SOLO si hay algún dato ingresado
+    formularioModificado = tieneCamposLlenos || tieneNotas || tieneRefacciones;
+    actualizarEstadoNavegacion(formularioModificado);
+};
+
+window.marcarFormularioComoLimpio = function () {
+    formularioModificado = false;
+    actualizarEstadoNavegacion(false);
+};
+
+function actualizarEstadoNavegacion(bloqueado) {
+    const enlacesNav = document.querySelectorAll('.tarjeta-nav');
+    enlacesNav.forEach(link => {
+        if (bloqueado) {
+            link.classList.add('nav-bloqueada');
+        } else {
+            link.classList.remove('nav-bloqueada');
+        }
+    });
+}
+
+// Escuchadores de eventos
+document.addEventListener('DOMContentLoaded', () => {
+    const appContainer = document.getElementById('app-container');
+
+    // Evalúa cada vez que el usuario escribe O borra un caracter (input/keyup/change)
+    if (appContainer) {
+        ['input', 'keyup', 'change'].forEach(evento => {
+            appContainer.addEventListener(evento, (e) => {
+                // Ignorar búsquedas e insumos de los modales
+                if (e.target.id === 'busquedaEco' || e.target.id.startsWith('filtro')) return;
+
+                // Ejecuta la verificación en tiempo real
+                window.evaluarEstadoFormulario();
+            });
+        });
+    }
+
+    // Intercepta los clics en los botones de cambio de vale
+    document.querySelectorAll('.tarjeta-nav').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (formularioModificado) {
+                e.preventDefault();
+                window.mostrarToast("⚠️ Tienes datos ingresados sin guardar. Guarda o limpia primero.", "advertencia");
+            }
+        });
+    });
+
+    // Alerta del navegador al intentar salir/recargar la pestaña
+    window.addEventListener('beforeunload', (e) => {
+        if (formularioModificado) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+});
+
+// --- SISTEMA DE NOTIFICACIONES TOAST CON RESPUESTA HÁPTICA ---
+window.mostrarToast = function (mensaje, tipo = 'exito') {
+    // Dispara la vibración háptica según el tipo de notificación
+    if (typeof window.vibrar === 'function') {
+        window.vibrar(tipo);
+    }
+
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'no-print';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.innerHTML = `<span>${mensaje}</span>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+};
+
+// --- CAMBIO DE TEMA (MODO OSCURO / CLARO) ---
+window.toggleTema = function () {
+    const temaActual = document.documentElement.getAttribute('data-theme') || 'light';
+    const nuevoTema = temaActual === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', nuevoTema);
+    localStorage.setItem('somsi_tema', nuevoTema);
+    
+    actualizarTextoBotonTema(nuevoTema);
+};
+
+function actualizarTextoBotonTema(tema) {
+    const btns = document.querySelectorAll('.btn-theme-toggle');
+    btns.forEach(btn => {
+        btn.innerText = tema === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+    });
+}
+
+// Cargar preferencia guardada al iniciar la página
+document.addEventListener('DOMContentLoaded', () => {
+    const temaGuardado = localStorage.getItem('somsi_tema') || 'light';
+    document.documentElement.setAttribute('data-theme', temaGuardado);
+    actualizarTextoBotonTema(temaGuardado);
+});
+
+// --- IMPRESIÓN DE ETIQUETA TÉRMICA (48mm x 25mm) ---
+window.exportarEtiquetaTermica = function () {
+    // --- VALIDACIÓN DE VALE VACÍO ---
+    window.evaluarEstadoFormulario();
+    if (!formularioModificado) {
+        window.mostrarToast("⚠️ No hay información suficiente para generar la etiqueta.", "advertencia");
+        return;
+    }
+    const { jsPDF } = window.jspdf;
+
+    // Configurar dimensiones exactas de la etiqueta [48mm, 25mm] en horizontal (landscape)
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [25, 48] // Alto 25mm, Ancho 48mm
+    });
+
+    const folio = document.getElementById('folioVale').value;
+    const eco = document.getElementById('equipoEco').value.toUpperCase() || 'N/A';
+    const tec = document.getElementById('tecnicoNombre').value.toUpperCase() || 'SIN NOMBRE';
+    const fecha = new Date().toLocaleDateString('es-MX');
+
+    // Manguera de datos de las refacciones (toma la primera pieza para la etiqueta)
+    const primeraFila = document.querySelector('#itemsBody tr');
+    const desc = primeraFila?.querySelector('.desc-field')?.value?.toUpperCase() || 'REFACCIÓN VUELTA';
+    const cant = primeraFila?.querySelector('.cant-field')?.value || '1';
+    const code = primeraFila?.querySelector('.code-field')?.value?.toUpperCase() || 'S/C';
+
+    // 1. Borde ligero / Encabezado
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("SOMSI S.A. DE C.V.", 2, 4);
+
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.text(`FOLIO: ${folio}`, 32, 4);
+
+    // Línea divisora
+    doc.setLineWidth(0.2);
+    doc.line(2, 5.5, 46, 5.5);
+
+    // 2. Datos del Equipo y Técnico
+    doc.setFontSize(5.5);
+    doc.text(`FECHA: ${fecha}`, 2, 8.5);
+    doc.text(`ECO: ${eco}`, 26, 8.5);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`TÉC: ${tec.substring(0, 22)}`, 2, 12); // Trunca si es muy largo
+
+    // Línea divisora secundaria
+    doc.line(2, 13.5, 46, 13.5);
+
+    // 3. Detalle de la Refacción
+    doc.setFontSize(6);
+    doc.text(`CANT: ${cant}`, 2, 17);
+    doc.text(`CÓD: ${code}`, 18, 17);
+
+    doc.setFontSize(5.5);
+    doc.setFont("helvetica", "normal");
+    // Ajustar texto largo de la descripción para que no se salga de los 48mm
+    const descSplit = doc.splitTextToSize(`DESC: ${desc}`, 44);
+    doc.text(descSplit, 2, 20.5);
+
+    // Abrir ventana directa de impresión
+    window.open(doc.output('bloburl'), '_blank');
+};
+
+// --- SISTEMA DE RESPUESTA HÁPTICA (VIBRACIÓN MÓVIL) ---
+window.vibrar = function (tipo = 'clic') {
+    // Verificar si el dispositivo soporta vibración
+    if (!('navigator' in window) || !('vibrate' in navigator)) return;
+
+    switch (tipo) {
+        case 'exito':
+            navigator.vibrate([80, 40, 80]); // Vibración doble corta y ágil
+            break;
+        case 'error':
+            navigator.vibrate([150, 50, 150, 50, 200]); // Patrón de alerta/freno
+            break;
+        case 'advertencia':
+            navigator.vibrate([120, 60, 120]); // Dos pulso medios
+            break;
+        case 'clic':
+        default:
+            navigator.vibrate(40); // Pulsación sutil al tocar botones
+            break;
     }
 };
