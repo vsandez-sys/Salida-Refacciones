@@ -1,17 +1,27 @@
-/* --- SOMSI - SISTEMA DE VALES PRO --- */
+/* --- SOMSI - SISTEMA DE VALES PRO (SALIDA) --- */
 
-let idDocumentoActual = ""; // Guarda el ID del vale que se está consultando/editando
+let idDocumentoActual = "";
+window.historialLocal = []; // Almacena en memoria el historial para filtrados e impresiones
+
+const OBTENER_PIN_ALMACEN = () => localStorage.getItem("somsi_pin_almacen") || "1234";
+const OBTENER_DICCIONARIO = () => JSON.parse(localStorage.getItem("somsi_diccionario") || "{}");
+
+function normalizarConcepto(descripcion) {
+    if (!descripcion) return "";
+    const clave = descripcion.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const dict = OBTENER_DICCIONARIO();
+    return dict[clave] || descripcion.trim().toUpperCase();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('itemsBody').children.length === 0) {
         window.addRow();
     }
-    // Generar primer folio al cargar
     setTimeout(window.generarSiguienteFolio, 1000);
 });
 
-// --- AGREGAR FILA CON NAVEGACIÓN Y CREACIÓN FLUIDA POR TECLADO (ENTER) ---
 window.addRow = function () {
+    window.vibrar('clic');
     const tbody = document.getElementById('itemsBody');
     const tr = document.createElement('tr');
     tr.className = "fila-item-nueva";
@@ -20,40 +30,24 @@ window.addRow = function () {
         <td><input type="text" class="desc-field" placeholder="Descripción..."></td>
         <td><input type="text" class="code-field" placeholder="Código..."></td>
         <td class="no-print">
-    <button onclick="this.parentElement.parentElement.remove(); window.evaluarEstadoFormulario();" class="btn-del" style="background:none;border:none;color:red;cursor:pointer;font-size:1.2rem;">×</button>
-</td>`;
+            <button onclick="this.parentElement.parentElement.remove(); window.evaluarEstadoFormulario();" class="btn-del" style="background:none;border:none;color:red;cursor:pointer;font-size:1.2rem;">×</button>
+        </td>`;
     tbody.appendChild(tr);
 
-    // Obtener las celdas de esta fila recién creada
     const cantInput = tr.querySelector('.cant-field');
     const descInput = tr.querySelector('.desc-field');
     const codeInput = tr.querySelector('.code-field');
 
-    // 1. ENTER en Cantidad -> Salta a Descripción
     cantInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            descInput.focus();
-            descInput.select();
-        }
+        if (e.key === 'Enter') { e.preventDefault(); descInput.focus(); descInput.select(); }
     });
-
-    // 2. ENTER en Descripción -> Salta a Código
     descInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            codeInput.focus();
-            codeInput.select();
-        }
+        if (e.key === 'Enter') { e.preventDefault(); codeInput.focus(); codeInput.select(); }
     });
-
-    // 3. ENTER en Código -> Crea una fila nueva y salta a su Cantidad
     codeInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            window.addRow(); // Crear la nueva fila de inmediato
-
-            // Poner el foco en el campo Cantidad de la fila que se acaba de crear
+            window.addRow();
             const ultimaFila = tbody.lastElementChild;
             if (ultimaFila) {
                 const nuevaCant = ultimaFila.querySelector('.cant-field');
@@ -64,7 +58,6 @@ window.addRow = function () {
     });
 };
 
-// --- FILTRADO POR ECONÓMICO ---
 window.filtrarHistorial = function () {
     const texto = document.getElementById('busquedaEco').value.toUpperCase().trim();
     const filas = document.querySelectorAll('.fila-historial');
@@ -74,7 +67,6 @@ window.filtrarHistorial = function () {
     });
 };
 
-// --- FOLIO INTELIGENTE ---
 window.generarSiguienteFolio = async function () {
     const { doc, getDoc } = window.dbFuncs;
     try {
@@ -90,13 +82,11 @@ window.generarSiguienteFolio = async function () {
     }
 };
 
-// --- GESTIÓN DE FIREBASE ---
 window.procesarVale = async function () {
     const btn = document.querySelector('.btn-pdf');
     if (btn.disabled) return;
     
-// --- VALIDACIÓN DE VALE VACÍO ---
-    window.evaluarEstadoFormulario(); // Reevalúa todos los campos
+    window.evaluarEstadoFormulario();
     if (!formularioModificado) {
         window.mostrarToast("⚠️ El vale está completamente vacío. Ingresa al menos un dato antes de guardar.", "advertencia");
         return;
@@ -108,7 +98,7 @@ window.procesarVale = async function () {
     try {
         await window.guardarEnNube();
         await window.exportarPDF();
-        window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
+        window.marcarFormularioComoLimpio();
         btn.innerText = "¡VALE GUARDADO!";
         setTimeout(() => {
             btn.disabled = false;
@@ -141,6 +131,7 @@ window.guardarEnNube = async function () {
                 folio: folioAsignado,
                 tecnico: document.getElementById('tecnicoNombre').value,
                 supervisor: document.getElementById('supervisorNombre').value,
+                notas: document.getElementById('notesArea').innerText,
                 timestamp: Date.now(),
                 equipo: {
                     marca: document.getElementById('equipoMarca').value,
@@ -153,7 +144,7 @@ window.guardarEnNube = async function () {
                         desc: tr.querySelector('.desc-field')?.value?.trim() || '',
                         code: tr.querySelector('.code-field')?.value?.trim() || ''
                     }))
-                    .filter(item => item.desc !== "") // Ignores filas en blanco
+                    .filter(item => item.desc !== "")
             };
 
             const valesRef = collection(window.db, "vales");
@@ -163,15 +154,12 @@ window.guardarEnNube = async function () {
         });
 
         document.getElementById('folioVale').value = folioAsignado;
-        console.log("Vale guardado con éxito. Folio asignado:", folioAsignado);
-
     } catch (e) {
         console.error("Error en la transacción: ", e);
         throw e;
     }
 };
 
-// --- CARGAR HISTORIAL DESDE LA NUBE ---
 window.cargarHistorialDesdeNube = async function () {
     const { collection, getDocs, query, orderBy } = window.dbFuncs;
     const container = document.getElementById('historialBody');
@@ -179,10 +167,13 @@ window.cargarHistorialDesdeNube = async function () {
         const q = query(collection(window.db, "vales"), orderBy("timestamp", "desc"));
         const snapshot = await getDocs(q);
         container.innerHTML = "";
+        window.historialLocal = [];
 
         snapshot.forEach(docSnap => {
             const v = docSnap.data();
             const id = docSnap.id;
+            window.historialLocal.push({ ...v, idDocumento: id });
+
             const fechaHora = new Date(v.timestamp).toLocaleString('es-MX', {
                 day: '2-digit', month: '2-digit', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
@@ -210,7 +201,7 @@ window.cargarHistorialDesdeNube = async function () {
 };
 
 window.cargarValeEnPantalla = function (docId, v) {
-    idDocumentoActual = docId; // Guardamos el ID del documento en Firebase
+    idDocumentoActual = docId;
 
     document.getElementById('folioVale').value = v.folio;
     document.getElementById('tecnicoNombre').value = v.tecnico || "";
@@ -223,7 +214,6 @@ window.cargarValeEnPantalla = function (docId, v) {
     const tbody = document.getElementById('itemsBody');
     tbody.innerHTML = "";
 
-    // Renderizamos las refacciones existentes cargadas desde la base de datos
     if (v.items && v.items.length > 0) {
         v.items.forEach(item => {
             const tr = document.createElement('tr');
@@ -239,7 +229,7 @@ window.cargarValeEnPantalla = function (docId, v) {
     }
 
     window.setModoLectura(true);
-    window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
+    window.marcarFormularioComoLimpio();
     window.toggleHistorial();
 };
 
@@ -252,68 +242,15 @@ window.eliminarVale = async function (id) {
     } catch (e) { window.mostrarToast("Error al eliminar: " + e.message, "error"); }
 };
 
-// --- AGREGAR NUEVAS REFACCIONES A UN FOLIO EXISTENTE ---
-window.guardarNuevosArticulosEnFolio = async function () {
-    if (!idDocumentoActual) {
-        window.mostrarToast("No hay ningún vale cargado para modificar.", "advertencia");
-        return;
-    }
-
-    // Leemos updateDoc y arrayUnion desde tu inicializador window.dbFuncs
-    const { doc, updateDoc, arrayUnion, getDoc } = window.dbFuncs;
-
-    const filasNuevas = document.querySelectorAll('#itemsBody tr.fila-item-nueva');
-    const nuevosItems = [];
-
-    filasNuevas.forEach(tr => {
-        const cant = tr.querySelector('.cant-field').value;
-        const desc = tr.querySelector('.desc-field').value;
-        const code = tr.querySelector('.code-field').value;
-
-        if (desc.trim() !== "") {
-            nuevosItems.push({ cant, desc, code });
-        }
-    });
-
-    if (nuevosItems.length === 0) {
-        window.mostrarToast("Agrega al menos una nueva refacción para guardar.", "advertencia");
-        return;
-    }
-
-    try {
-        const docRef = doc(window.db, "vales", idDocumentoActual);
-
-        // Se agregan los nuevos elementos sin sobreescribir los anteriores
-        await updateDoc(docRef, {
-            items: arrayUnion(...nuevosItems)
-        });
-
-        window.mostrarToast("¡Refacciones agregadas exitosamente al folio!", "exito");
-
-        // Recargar el documento para actualizar la pantalla
-        const actualizado = await getDoc(docRef);
-        if (actualizado.exists()) {
-            window.cargarValeEnPantalla(idDocumentoActual, actualizado.data());
-        }
-
-    } catch (e) {
-        console.error("Error al actualizar el vale:", e);
-        window.mostrarToast("Error al actualizar el vale: " + e.message, "error");
-    }
-};
-
-/// --- PDF OPTIMIZADO CON REDUCCIÓN DINÁMICA Y MANEJO DE PÁGINAS ---
 window.exportarPDF = async function () {
-    // --- VALIDACIÓN DE VALE VACÍO ---
     window.evaluarEstadoFormulario();
     if (!formularioModificado) {
         window.mostrarToast("⚠️ No puedes generar un PDF de un vale completamente vacío.", "advertencia");
         return;
     }
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF(); // Hoja A4 por defecto (210mm x 297mm)
+    const doc = new jsPDF();
 
-    // 1. Encabezado principal
     doc.setFillColor(30, 30, 30);
     doc.rect(0, 0, 210, 28, 'F');
     doc.setTextColor(164, 198, 57);
@@ -321,7 +258,6 @@ window.exportarPDF = async function () {
     doc.setFont("helvetica", "bold");
     doc.text("SOMSI - VALE DE SALIDA", 15, 18);
 
-    // 2. Datos del Vale
     doc.setTextColor(51, 51, 51);
     doc.setFontSize(9.5);
     doc.setFont("helvetica", "normal");
@@ -334,14 +270,12 @@ window.exportarPDF = async function () {
     doc.text(`FOLIO: ${document.getElementById('folioVale').value}`, 160, 37);
     doc.text(`FECHA/HORA: ${new Date().toLocaleString()}`, 145, 44);
 
-    // Extraer filas de la tabla
     const rows = Array.from(document.querySelectorAll('#itemsBody tr')).map(tr => [
         tr.querySelector('.cant-field').value,
         tr.querySelector('.desc-field').value.toUpperCase(),
         tr.querySelector('.code-field').value.toUpperCase()
     ]);
 
-    // --- REDUCCIÓN DINÁMICA SEGÚN CANTIDAD DE ARTÍCULOS ---
     let tamanoFuente = 10;
     let rellenoCelda = 4;
 
@@ -353,27 +287,23 @@ window.exportarPDF = async function () {
         rellenoCelda = 3;
     }
 
-    // Renderizar la tabla con las propiedades calculadas
     doc.autoTable({
         startY: 63,
         head: [['CANT', 'DESCRIPCIÓN', 'CÓDIGO']],
         body: rows,
         headStyles: { fillColor: [20, 20, 20], textColor: [164, 198, 57] },
         styles: { fontSize: tamanoFuente, cellPadding: rellenoCelda },
-        margin: { top: 15, bottom: 40, left: 15, right: 15 } // Margen para evitar colisiones
+        margin: { top: 15, bottom: 40, left: 15, right: 15 }
     });
 
-    // Punto donde termina la tabla en la página actual
     let fY = doc.lastAutoTable.finalY + 6;
 
-    // --- NOTAS INTELIGENTES ---
     const notas = document.getElementById('notesArea').innerText;
     if (notas) {
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         const splitNotas = doc.splitTextToSize(`NOTAS: ${notas.toUpperCase()}`, 180);
 
-        // Si las notas exceden el límite seguro de la página (245 mm)
         if (fY + (splitNotas.length * 4) > 245) {
             doc.addPage();
             fY = 25;
@@ -382,17 +312,13 @@ window.exportarPDF = async function () {
         fY += (splitNotas.length * 4) + 6;
     }
 
-    // --- POSICIONAMIENTO Y FIRMAS SEGURAS ---
-    // Si la tabla/notas terminan más abajo de 245 mm, las firmas pasan a la siguiente página
     if (fY > 245) {
         doc.addPage();
-        fY = 50; // Posición limpia en la parte superior de la nueva página
+        fY = 50;
     } else {
-        // Si caben en la primera página, se anclan al fondo (mínimo Y = 250 mm)
         fY = Math.max(fY + 8, 250);
     }
 
-    // Dibujo de las líneas y rótulos de firma
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
 
@@ -408,11 +334,9 @@ window.exportarPDF = async function () {
     doc.setFont("helvetica", "bold");
     doc.text(document.getElementById('supervisorNombre').value.toUpperCase(), 170, fY + 10, { align: "center" });
 
-    // Abrir PDF listo para imprimir/guardar
     window.open(doc.output('bloburl'), '_blank');
 };
 
-// --- UTILIDADES ---
 window.nuevoVale = function () {
     if (!confirm("¿Deseas limpiar todo para un nuevo vale?")) return;
     idDocumentoActual = "";
@@ -422,14 +346,14 @@ window.nuevoVale = function () {
     window.addRow();
     window.setModoLectura(false);
     window.generarSiguienteFolio();
-    window.marcarFormularioComoLimpio(); // <-- AGREGAR AQUÍ
+    window.marcarFormularioComoLimpio();
 };
 
 window.setModoLectura = function (b) {
     document.querySelectorAll('input, .textarea-mock').forEach(i => {
         if (i.id !== "folioVale") {
             i.readOnly = b;
-            i.style.backgroundColor = b ? "#f9f9f9" : "";
+            i.style.backgroundColor = b ? "var(--input-bg)" : "";
         }
     });
     const btn = document.querySelector('.btn-pdf');
@@ -443,69 +367,12 @@ window.toggleHistorial = function () {
     if (modal.classList.contains('active')) window.cargarHistorialDesdeNube();
 };
 
-// --- EXPORTACIÓN A EXCEL (CSV) ---
-window.descargarExcel = async function () {
-    const { collection, getDocs, query, orderBy } = window.dbFuncs;
-    const btn = document.querySelector('.btn-excel');
-
-    try {
-        btn.innerText = "⏳ GENERANDO...";
-        btn.disabled = true;
-
-        const q = query(collection(window.db, "vales"), orderBy("timestamp", "desc"));
-        const snapshot = await getDocs(q);
-
-        let csvContent = "\uFEFF";
-        csvContent += "Folio,Fecha,Técnico,Supervisor,Marca,Económico,Serie,Cantidad,Descripción_Refacción,Código_Refacción,Notas\n";
-
-        const cleanText = (txt) => `"${(txt || '').toString().replace(/"/g, '""').replace(/\n/g, ' ')}"`;
-
-        snapshot.forEach(docSnap => {
-            const v = docSnap.data();
-            const fechaHora = new Date(v.timestamp).toLocaleString('es-MX');
-
-            if (!v.items || v.items.length === 0) {
-                csvContent += `${v.folio},${cleanText(fechaHora)},${cleanText(v.tecnico)},${cleanText(v.supervisor)},${cleanText(v.equipo?.marca)},${cleanText(v.equipo?.economico)},${cleanText(v.equipo?.serie)},,,,${cleanText(v.notas)}\n`;
-            } else {
-                v.items.forEach(item => {
-                    csvContent += `${v.folio},${cleanText(fechaHora)},${cleanText(v.tecnico)},${cleanText(v.supervisor)},${cleanText(v.equipo?.marca)},${cleanText(v.equipo?.economico)},${cleanText(v.equipo?.serie)},${cleanText(item.cant)},${cleanText(item.desc)},${cleanText(item.code)},${cleanText(v.notas)}\n`;
-                });
-            }
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-
-        const hoy = new Date().toISOString().split('T')[0];
-        link.setAttribute("download", `Reporte_Vales_SOMSI_${hoy}.csv`);
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        btn.innerText = "⬇️ Descargar Excel";
-        btn.disabled = false;
-
-    } catch (e) {
-        console.error("Error al exportar:", e);
-       window.mostrarToast("Hubo un problema al generar el archivo Excel.", "error");
-        btn.disabled = false;
-    }
-};
-
-
-
-// --- MODAL DE RESUMEN Y REPORTES MULTI-FILTRO ---
-
 window.toggleModalResumen = function () {
     const modal = document.getElementById('modalResumenTecnico');
     const displayActual = modal.style.display;
     modal.style.display = (displayActual === 'none' || displayActual === '') ? 'flex' : 'none';
 };
 
-// --- FUNCIÓN DE REPORTES Y RESUMEN (FECHAS CORREGIDAS) ---
 window.generarResumen = async function () {
     const tecnicoBuscado = document.getElementById('filtroTecnicoNombre').value.trim().toUpperCase();
     const unidadBuscada = document.getElementById('filtroUnidadEco').value.trim().toUpperCase();
@@ -518,14 +385,12 @@ window.generarResumen = async function () {
         }
     }
 
-    // 1. CONVERSIÓN SEGURA DE FECHA DE INICIO (00:00:00 del día)
     let tInicio = 0;
     if (fechaInicioVal) {
         const [y, m, d] = fechaInicioVal.split('-').map(Number);
         tInicio = new Date(y, m - 1, d, 0, 0, 0, 0).getTime();
     }
 
-    // 2. CONVERSIÓN SEGURA DE FECHA DE FIN (23:59:59 del día)
     let tFin = Date.now();
     if (fechaFinVal) {
         const [y, m, d] = fechaFinVal.split('-').map(Number);
@@ -553,28 +418,22 @@ window.generarResumen = async function () {
             const tec = (v.tecnico || "").toUpperCase();
             const eco = (v.equipo && v.equipo.economico) ? v.equipo.economico.toUpperCase() : "";
 
-            // 3. EXTRACCIÓN SEGURA DEL TIMESTAMP DE FIREBASE
             let ts = 0;
             if (typeof v.timestamp === 'number') {
                 ts = v.timestamp;
             } else if (v.timestamp && typeof v.timestamp.toMillis === 'function') {
-                ts = v.timestamp.toMillis(); // Si es objeto Timestamp de Firestore
+                ts = v.timestamp.toMillis();
             } else if (v.timestamp && v.timestamp.seconds) {
                 ts = v.timestamp.seconds * 1000;
             } else if (typeof v.timestamp === 'string') {
                 ts = new Date(v.timestamp).getTime();
             }
 
-            // EVALUACIÓN DE FILTROS DINÁMICOS
             const cumpleTecnico = !tecnicoBuscado || tec.includes(tecnicoBuscado);
             const cumpleUnidad = !unidadBuscada || eco.includes(unidadBuscada);
-
-            // Si no se puso fecha inicio, cumpleFechaInicio es true
             const cumpleFechaInicio = !fechaInicioVal || ts >= tInicio;
-            // Si no se puso fecha fin, cumpleFechaFin es true
             const cumpleFechaFin = !fechaFinVal || ts <= tFin;
 
-            // Si pasa TODOS los criterios activos:
             if (cumpleTecnico && cumpleUnidad && cumpleFechaInicio && cumpleFechaFin) {
                 totalVales++;
                 if (eco) equiposAtendidos.add(eco);
@@ -583,7 +442,7 @@ window.generarResumen = async function () {
                 if (v.items && Array.isArray(v.items)) {
                     v.items.forEach(item => {
                         const cant = parseFloat(item.cant) || 0;
-                        const desc = (item.desc || "SIN DESCRIPCIÓN").toUpperCase().trim();
+                        const desc = normalizarConcepto(item.desc || "SIN DESCRIPCIÓN");
                         const code = (item.code || "S/C").toUpperCase().trim();
                         const key = `${code}___${desc}`;
 
@@ -598,7 +457,6 @@ window.generarResumen = async function () {
             }
         });
 
-        // Actualizar interfaz
         document.getElementById('statTotalVales').innerText = totalVales;
         document.getElementById('statTotalPiezas').innerText = totalPiezasCount;
         document.getElementById('statTecnicos').innerText = Array.from(tecnicosInvolucrados).join(', ') || 'Sin especificar';
@@ -610,11 +468,11 @@ window.generarResumen = async function () {
         const listaOrdenada = Object.values(resumenItems).sort((a, b) => b.totalCant - a.totalCant);
 
         if (listaOrdenada.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#888;">No se encontraron registros que coincidan con el rango de fechas seleccionado.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#888;">No se encontraron registros que coincidan con los filtros.</td></tr>`;
         } else {
             listaOrdenada.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = "1px solid #eee";
+                tr.style.borderBottom = "1px solid var(--border-color)";
                 tr.innerHTML = `
                     <td style="padding:8px; font-weight:bold;">${item.code}</td>
                     <td style="padding:8px;">${item.desc}</td>
@@ -636,31 +494,18 @@ window.generarResumen = async function () {
     }
 };
 
-// --- SISTEMA DE PROTECCIÓN INTELIGENTE CONTRA PÉRDIDA DE DATOS ---
 let formularioModificado = false;
 
-// Evalúa en tiempo real si el formulario tiene contenido real o si ya se borró todo
 window.evaluarEstadoFormulario = function () {
-    // 1. Evaluar campos de texto del encabezado y equipo
-    const camposPrincipales = [
-        'tecnicoNombre',
-        'supervisorNombre',
-        'equipoMarca',
-        'equipoEco',
-        'equipoSerie',
-        'idTerceros' // Si existe en devoluciones
-    ];
-
+    const camposPrincipales = ['tecnicoNombre', 'supervisorNombre', 'equipoMarca', 'equipoEco', 'equipoSerie'];
     const tieneCamposLlenos = camposPrincipales.some(id => {
         const el = document.getElementById(id);
         return el && el.value.trim() !== "";
     });
 
-    // 2. Evaluar área de notas
     const notesArea = document.getElementById('notesArea');
     const tieneNotas = notesArea && notesArea.innerText.trim() !== "";
 
-    // 3. Evaluar refacciones ingresadas en la tabla
     const filas = document.querySelectorAll('#itemsBody tr');
     let tieneRefacciones = false;
 
@@ -669,13 +514,11 @@ window.evaluarEstadoFormulario = function () {
         const code = tr.querySelector('.code-field')?.value?.trim() || "";
         const cant = tr.querySelector('.cant-field')?.value?.trim() || "1";
 
-        // Si escribió texto o cambió la cantidad por defecto (1)
         if (desc !== "" || code !== "" || (cant !== "1" && cant !== "")) {
             tieneRefacciones = true;
         }
     });
 
-    // El formulario está modificado SOLO si hay algún dato ingresado
     formularioModificado = tieneCamposLlenos || tieneNotas || tieneRefacciones;
     actualizarEstadoNavegacion(formularioModificado);
 };
@@ -696,24 +539,17 @@ function actualizarEstadoNavegacion(bloqueado) {
     });
 }
 
-// Escuchadores de eventos
 document.addEventListener('DOMContentLoaded', () => {
     const appContainer = document.getElementById('app-container');
-
-    // Evalúa cada vez que el usuario escribe O borra un caracter (input/keyup/change)
     if (appContainer) {
         ['input', 'keyup', 'change'].forEach(evento => {
             appContainer.addEventListener(evento, (e) => {
-                // Ignorar búsquedas e insumos de los modales
-                if (e.target.id === 'busquedaEco' || e.target.id.startsWith('filtro')) return;
-
-                // Ejecuta la verificación en tiempo real
+                if (e.target.id === 'busquedaEco' || e.target.id.startsWith('filtro') || e.target.id.startsWith('input')) return;
                 window.evaluarEstadoFormulario();
             });
         });
     }
 
-    // Intercepta los clics en los botones de cambio de vale
     document.querySelectorAll('.tarjeta-nav').forEach(link => {
         link.addEventListener('click', (e) => {
             if (formularioModificado) {
@@ -723,7 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Alerta del navegador al intentar salir/recargar la pestaña
     window.addEventListener('beforeunload', (e) => {
         if (formularioModificado) {
             e.preventDefault();
@@ -732,12 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- SISTEMA DE NOTIFICACIONES TOAST CON RESPUESTA HÁPTICA ---
 window.mostrarToast = function (mensaje, tipo = 'exito') {
-    // Dispara la vibración háptica según el tipo de notificación
-    if (typeof window.vibrar === 'function') {
-        window.vibrar(tipo);
-    }
+    if (typeof window.vibrar === 'function') window.vibrar(tipo);
 
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -760,116 +591,197 @@ window.mostrarToast = function (mensaje, tipo = 'exito') {
     }, 3500);
 };
 
-// --- CAMBIO DE TEMA (MODO OSCURO / CLARO) ---
 window.toggleTema = function () {
     const temaActual = document.documentElement.getAttribute('data-theme') || 'light';
     const nuevoTema = temaActual === 'dark' ? 'light' : 'dark';
     
     document.documentElement.setAttribute('data-theme', nuevoTema);
     localStorage.setItem('somsi_tema', nuevoTema);
-    
     actualizarTextoBotonTema(nuevoTema);
 };
 
 function actualizarTextoBotonTema(tema) {
     const btns = document.querySelectorAll('.btn-theme-toggle');
     btns.forEach(btn => {
-        btn.innerText = tema === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+        if (btn.innerText.includes('Modo')) {
+            btn.innerText = tema === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+        }
     });
 }
 
-// Cargar preferencia guardada al iniciar la página
 document.addEventListener('DOMContentLoaded', () => {
     const temaGuardado = localStorage.getItem('somsi_tema') || 'light';
     document.documentElement.setAttribute('data-theme', temaGuardado);
     actualizarTextoBotonTema(temaGuardado);
 });
 
-// --- IMPRESIÓN DE ETIQUETA TÉRMICA (48mm x 25mm) ---
-window.exportarEtiquetaTermica = function () {
-    // --- VALIDACIÓN DE VALE VACÍO ---
-    window.evaluarEstadoFormulario();
-    if (!formularioModificado) {
-        window.mostrarToast("⚠️ No hay información suficiente para generar la etiqueta.", "advertencia");
-        return;
-    }
-    const { jsPDF } = window.jspdf;
-
-    // Configurar dimensiones exactas de la etiqueta [48mm, 25mm] en horizontal (landscape)
-    const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: [25, 48] // Alto 25mm, Ancho 48mm
-    });
-
-    const folio = document.getElementById('folioVale').value;
-    const eco = document.getElementById('equipoEco').value.toUpperCase() || 'N/A';
-    const tec = document.getElementById('tecnicoNombre').value.toUpperCase() || 'SIN NOMBRE';
-    const fecha = new Date().toLocaleDateString('es-MX');
-
-    // Manguera de datos de las refacciones (toma la primera pieza para la etiqueta)
-    const primeraFila = document.querySelector('#itemsBody tr');
-    const desc = primeraFila?.querySelector('.desc-field')?.value?.toUpperCase() || 'REFACCIÓN VUELTA';
-    const cant = primeraFila?.querySelector('.cant-field')?.value || '1';
-    const code = primeraFila?.querySelector('.code-field')?.value?.toUpperCase() || 'S/C';
-
-    // 1. Borde ligero / Encabezado
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text("SOMSI S.A. DE C.V.", 2, 4);
-
-    doc.setFontSize(6);
-    doc.setFont("helvetica", "normal");
-    doc.text(`FOLIO: ${folio}`, 32, 4);
-
-    // Línea divisora
-    doc.setLineWidth(0.2);
-    doc.line(2, 5.5, 46, 5.5);
-
-    // 2. Datos del Equipo y Técnico
-    doc.setFontSize(5.5);
-    doc.text(`FECHA: ${fecha}`, 2, 8.5);
-    doc.text(`ECO: ${eco}`, 26, 8.5);
-
-    doc.setFont("helvetica", "bold");
-    doc.text(`TÉC: ${tec.substring(0, 22)}`, 2, 12); // Trunca si es muy largo
-
-    // Línea divisora secundaria
-    doc.line(2, 13.5, 46, 13.5);
-
-    // 3. Detalle de la Refacción
-    doc.setFontSize(6);
-    doc.text(`CANT: ${cant}`, 2, 17);
-    doc.text(`CÓD: ${code}`, 18, 17);
-
-    doc.setFontSize(5.5);
-    doc.setFont("helvetica", "normal");
-    // Ajustar texto largo de la descripción para que no se salga de los 48mm
-    const descSplit = doc.splitTextToSize(`DESC: ${desc}`, 44);
-    doc.text(descSplit, 2, 20.5);
-
-    // Abrir ventana directa de impresión
-    window.open(doc.output('bloburl'), '_blank');
-};
-
-// --- SISTEMA DE RESPUESTA HÁPTICA (VIBRACIÓN MÓVIL) ---
 window.vibrar = function (tipo = 'clic') {
-    // Verificar si el dispositivo soporta vibración
     if (!('navigator' in window) || !('vibrate' in navigator)) return;
 
     switch (tipo) {
-        case 'exito':
-            navigator.vibrate([80, 40, 80]); // Vibración doble corta y ágil
-            break;
-        case 'error':
-            navigator.vibrate([150, 50, 150, 50, 200]); // Patrón de alerta/freno
-            break;
-        case 'advertencia':
-            navigator.vibrate([120, 60, 120]); // Dos pulso medios
-            break;
-        case 'clic':
-        default:
-            navigator.vibrate(40); // Pulsación sutil al tocar botones
-            break;
+        case 'exito': navigator.vibrate([80, 40, 80]); break;
+        case 'error': navigator.vibrate([150, 50, 150, 50, 200]); break;
+        case 'advertencia': navigator.vibrate([120, 60, 120]); break;
+        case 'clic': default: navigator.vibrate(40); break;
     }
+};
+
+/* --- MÓDULO DE HOMOLOGACIÓN Y NIP --- */
+window.abrirGestorHomologacion = function () {
+    const pinIngresado = prompt("🔒 Ingresa la clave de administración para gestionar conceptos:");
+    if (pinIngresado === null) return;
+    if (pinIngresado !== OBTENER_PIN_ALMACEN()) {
+        window.mostrarToast("❌ Clave incorrecta. Acceso denegado.", "error");
+        return;
+    }
+    
+    const modal = document.getElementById("modalHomologacion");
+    if (modal) {
+        modal.classList.add("active");
+        window.renderizarListaSinonimos();
+    }
+};
+
+window.cerrarGestorHomologacion = function () {
+    const modal = document.getElementById("modalHomologacion");
+    if (modal) modal.classList.remove("active");
+};
+
+window.guardarSinonimo = function () {
+    const inputSin = document.getElementById("inputSinonimo");
+    const inputOfi = document.getElementById("inputOficial");
+    if (!inputSin || !inputOfi) return;
+
+    const original = inputSin.value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const oficial = inputOfi.value.trim().toUpperCase();
+
+    if (!original || !oficial) {
+        window.mostrarToast("⚠️ Llene ambos campos para guardar la equivalencia.", "advertencia");
+        return;
+    }
+
+    const dict = OBTENER_DICCIONARIO();
+    dict[original] = oficial;
+    localStorage.setItem("somsi_diccionario", JSON.stringify(dict));
+
+    inputSin.value = "";
+    inputOfi.value = "";
+    
+    window.mostrarToast("✅ Equivalencia guardada correctamente.", "exito");
+    window.renderizarListaSinonimos();
+};
+
+window.eliminarSinonimo = function (clave) {
+    const dict = OBTENER_DICCIONARIO();
+    delete dict[clave];
+    localStorage.setItem("somsi_diccionario", JSON.stringify(dict));
+    window.renderizarListaSinonimos();
+};
+
+window.renderizarListaSinonimos = function () {
+    const dict = OBTENER_DICCIONARIO();
+    const contenedor = document.getElementById("listaSinonimosBody");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+
+    const claves = Object.keys(dict);
+    if (claves.length === 0) {
+        contenedor.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:10px; color:#888;'>No hay sinónimos registrados.</td></tr>";
+        return;
+    }
+
+    claves.forEach(clave => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td style="padding:6px 10px;"><b>${clave}</b></td>
+            <td style="padding:6px 10px;">➡️ ${dict[clave]}</td>
+            <td style="padding:6px 10px; text-align:center;">
+                <button class="btn-del-mini" onclick="eliminarSinonimo('${clave}')">🗑️</button>
+            </td>
+        `;
+        contenedor.appendChild(tr);
+    });
+};
+
+window.cambiarPinAlmacen = function () {
+    const nuevoPin = prompt("🔑 Ingresa el nuevo NIP de administración (mínimo 4 dígitos):");
+    if (nuevoPin && nuevoPin.trim().length >= 4) {
+        localStorage.setItem("somsi_pin_almacen", nuevoPin.trim());
+        window.mostrarToast("🔐 Clave actualizada con éxito.", "exito");
+    } else if (nuevoPin !== null) {
+        window.mostrarToast("⚠️ El NIP debe tener al menos 4 dígitos.", "advertencia");
+    }
+};
+
+/* --- EXPORTACIÓN FILTRADA A EXCEL CON HOMOLOGACIÓN --- */
+window.exportarExcelHistorial = function () {
+    if (!window.historialLocal || window.historialLocal.length === 0) {
+        window.mostrarToast("⚠️ No hay datos cargados en el historial.", "advertencia");
+        return;
+    }
+
+    const filtroInput = document.getElementById("busquedaEco");
+    const filtro = filtroInput ? filtroInput.value.trim().toLowerCase() : "";
+    
+    const registrosFiltrados = window.historialLocal.filter(vale => {
+        if (!filtro) return true;
+        const eco = (vale.equipo?.economico || "").toLowerCase();
+        const folio = (vale.folio || "").toString().toLowerCase();
+        const tec = (vale.tecnico || "").toLowerCase();
+        return eco.includes(filtro) || folio.includes(filtro) || tec.includes(filtro);
+    });
+
+    if (registrosFiltrados.length === 0) {
+        window.mostrarToast("⚠️ No hay registros que coincidan con la búsqueda.", "advertencia");
+        return;
+    }
+
+    const filasExcel = [];
+
+    registrosFiltrados.forEach(vale => {
+        const fechaHora = vale.timestamp ? new Date(vale.timestamp).toLocaleString('es-MX') : "";
+        
+        if (vale.items && vale.items.length > 0) {
+            vale.items.forEach(item => {
+                filasExcel.push({
+                    "Folio": vale.folio || "S/N",
+                    "Fecha": fechaHora,
+                    "Económico / Equipo": vale.equipo?.economico || "",
+                    "Marca": vale.equipo?.marca || "",
+                    "Serie": vale.equipo?.serie || "",
+                    "Técnico": vale.tecnico || "",
+                    "Supervisor / Autoriza": vale.supervisor || "",
+                    "Cantidad": item.cant || 1,
+                    "Concepto Homologado": normalizarConcepto(item.desc),
+                    "Concepto Original": item.desc || "",
+                    "Código / Parte": item.code || "",
+                    "Notas": vale.notas || ""
+                });
+            });
+        } else {
+            filasExcel.push({
+                "Folio": vale.folio || "S/N",
+                "Fecha": fechaHora,
+                "Económico / Equipo": vale.equipo?.economico || "",
+                "Marca": vale.equipo?.marca || "",
+                "Serie": vale.equipo?.serie || "",
+                "Técnico": vale.tecnico || "",
+                "Supervisor / Autoriza": vale.supervisor || "",
+                "Cantidad": 0,
+                "Concepto Homologado": "SIN ITEMS",
+                "Concepto Original": "",
+                "Código / Parte": "",
+                "Notas": vale.notas || ""
+            });
+        }
+    });
+
+    const hoja = XLSX.utils.json_to_sheet(filasExcel);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Historial_Filtrado");
+
+    const fechaHoy = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(libro, `Reporte_Vales_SOMSI_${fechaHoy}.xlsx`);
+
+    window.mostrarToast("📊 Reporte Excel generado exitosamente.", "exito");
 };

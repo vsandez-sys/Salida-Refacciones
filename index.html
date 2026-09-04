@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e1e">
     <script>
@@ -19,14 +20,12 @@
             });
         }
     </script>
-
-
 </head>
 
 <body>
 
     <div class="main-container" id="app-container">
-        <!-- Selector de Vales (No se imprimirá) -->
+        <!-- Selector de Vales -->
         <div class="nav-vales no-print">
             <a href="index.html" class="tarjeta-nav activa">
                 <span class="icon">📤</span>
@@ -42,11 +41,14 @@
                     <p>Reingresar al sistema</p>
                 </div>
             </a>
-            <!-- Agrega este botón dentro de tu contenedor div.nav-vales -->
+         <!-- <button type="button" class="btn-theme-toggle no-print" onclick="window.abrirGestorHomologacion()">
+                ⚙️ Homologar
+            </button>-->
             <button type="button" class="btn-theme-toggle no-print" onclick="window.toggleTema()">
                 🌙 Modo Oscuro
             </button>
         </div>
+
         <header class="section header">
             <div class="logo-area">
                 <img src="assets/logo.png" alt="Logo" class="logo-img" onerror="this.style.opacity='0'">
@@ -117,214 +119,174 @@
 
         <div class="actions no-print">
             <button class="btn-pdf" onclick="procesarVale()">GENERAR PDF Y GUARDAR</button>
-            
             <button class="btn-history" onclick="toggleHistorial()">HISTORIAL</button>
             <button class="btn-new" onclick="nuevoVale()">NUEVO VALE</button>
         </div>
 
+        <!-- MODAL DE HISTORIAL -->
         <div id="modalHistorial" class="modal">
-            <!-- MODAL DE HISTORIAL (Modificado) -->
-            <div id="modalHistorial" class="modal-overlay">
-                <div class="modal-content" style="max-width: 850px;">
-
-                    <!-- ENCABEZADO CON EL NUEVO BOTÓN -->
-                    <div
-                        style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:20px; color:#1e1e1e;">Historial de Vales</h2>
-
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <!-- BOTÓN NUEVO DENTRO DEL HISTORIAL -->
-                            <button type="button" onclick="window.toggleModalResumen()"
-                                style="background:#a4c639; color:#fff; border:none; padding:6px 12px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.85rem;">
-                                Resumen por...
-                            </button>
-                            <button onclick="window.toggleHistorial()"
-                                style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
-                        </div>
-                    </div>
-
-                    <!-- Buscador por Económico existente -->
-                    <div style="margin-bottom: 15px;">
-                        <input type="text" id="busquedaEco" onkeyup="window.filtrarHistorial()"
-                            placeholder="🔍 Buscar por Económico..."
-                            style="width:100%; padding:8px; box-sizing:border-box;">
-                    </div>
-
-                    <!-- Tabla de historial -->
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
-                                    <th style="padding:8px;">FECHA</th>
-                                    <th style="padding:8px;">FOLIO</th>
-                                    <th style="padding:8px;">ECONÓMICO</th>
-                                    <th style="padding:8px;">ACCIONES</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historialBody">
-                                <!-- Filas cargadas dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- MODAL DE RESUMEN POR TÉCNICO (Con z-index: 1100 para sobreponerse) -->
-            <div id="modalResumenTecnico"
-                style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;">
-                <div
-                    style="background:#fff; width:90%; max-width:750px; max-height:90vh; overflow-y:auto; padding:20px; border-radius:8px; position:relative;">
-
-                    <div
-                        style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px;">
-                        <h3 style="margin:0; color:#1e1e1e;">📊 Reporte y Resumen de Consumos</h3>
-                        <button onclick="window.toggleModalResumen()"
-                            style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
-                    </div>
-
-                    <!-- FILTROS MULTIPLES (TODOS OPCIONALES) -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold;">TÉCNICO:</label>
-                            <input type="text" id="filtroTecnicoNombre" placeholder="Todos o nombre..."
-                                style="width:100%; padding:6px; box-sizing:border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold;">UNIDAD / ECONÓMICO:</label>
-                            <input type="text" id="filtroUnidadEco" placeholder="Todos o económico..."
-                                style="width:100%; padding:6px; box-sizing:border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold;">FECHA INICIO:</label>
-                            <input type="date" id="filtroFechaInicio"
-                                style="width:100%; padding:6px; box-sizing:border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold;">FECHA FIN:</label>
-                            <input type="date" id="filtroFechaFin"
-                                style="width:100%; padding:6px; box-sizing:border-box;">
-                        </div>
-                    </div>
-
-                    <div style="text-align:right; margin-bottom:20px;">
-                        <button id="btnGenerarReporte" onclick="window.generarResumen()"
-                            style="background:#a4c639; color:#fff; border:none; padding:8px 20px; font-weight:bold; cursor:pointer; border-radius:4px;">
-                            🔍 GENERAR REPORTE
+            <div class="modal-content" style="max-width: 850px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <h2 style="margin:20px; color:var(--text-color);">Historial de Vales</h2>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button type="button" onclick="window.toggleModalResumen()" style="background:#a4c639; color:#fff; border:none; padding:6px 12px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+                            Resumen por...
                         </button>
+                        <button class="btn-excel" onclick="window.exportarExcelHistorial()">📊 Excel</button>
+                        <button onclick="window.toggleHistorial()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-color);">×</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="busquedaEco" onkeyup="window.filtrarHistorial()" placeholder="🔍 Buscar por Económico..." style="width:100%; padding:8px; box-sizing:border-box;">
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
+                                <th style="padding:8px;">FECHA</th>
+                                <th style="padding:8px;">FOLIO</th>
+                                <th style="padding:8px;">ECONÓMICO</th>
+                                <th style="padding:8px;">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historialBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE RESUMEN POR TÉCNICO -->
+        <div id="modalResumenTecnico" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;">
+            <div style="background:var(--bg-container); width:90%; max-width:750px; max-height:90vh; overflow-y:auto; padding:20px; border-radius:8px; position:relative; color:var(--text-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #a4c639; padding-bottom:10px; margin-bottom:15px;">
+                    <h3 style="margin:0;">📊 Reporte y Resumen de Consumos</h3>
+                    <button onclick="window.toggleModalResumen()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-color);">×</button>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:bold;">TÉCNICO:</label>
+                        <input type="text" id="filtroTecnicoNombre" placeholder="Todos o nombre..." style="width:100%; padding:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:bold;">UNIDAD / ECONÓMICO:</label>
+                        <input type="text" id="filtroUnidadEco" placeholder="Todos o económico..." style="width:100%; padding:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:bold;">FECHA INICIO:</label>
+                        <input type="date" id="filtroFechaInicio" style="width:100%; padding:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:bold;">FECHA FIN:</label>
+                        <input type="date" id="filtroFechaFin" style="width:100%; padding:6px; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="text-align:right; margin-bottom:20px;">
+                    <button id="btnGenerarReporte" onclick="window.generarResumen()" style="background:#a4c639; color:#fff; border:none; padding:8px 20px; font-weight:bold; cursor:pointer; border-radius:4px;">
+                        🔍 GENERAR REPORTE
+                    </button>
+                </div>
+
+                <div id="resultadoResumen" style="display:none;">
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div style="flex:1; background:var(--card-bg); padding:10px; border-radius:5px; text-align:center; border: 1px solid var(--border-color);">
+                            <span style="font-size:0.8rem; color:#666;">Vales Coincidentes</span>
+                            <h3 id="statTotalVales" style="margin:5px 0 0 0;">0</h3>
+                        </div>
+                        <div style="flex:1; background:var(--card-bg); padding:10px; border-radius:5px; text-align:center; border: 1px solid var(--border-color);">
+                            <span style="font-size:0.8rem; color:#666;">Piezas Totales</span>
+                            <h3 id="statTotalPiezas" style="margin:5px 0 0 0; color:#a4c639;">0</h3>
+                        </div>
                     </div>
 
-                    <!-- CONTENEDOR DE RESULTADOS -->
-                    <div id="resultadoResumen" style="display:none;">
-                        <!-- Tarjetas con métricas -->
-                        <div style="display:flex; gap:15px; margin-bottom:15px;">
-                            <div
-                                style="flex:1; background:#f4f4f4; padding:10px; border-radius:5px; text-align:center;">
-                                <span style="font-size:0.8rem; color:#666;">Vales Coincidentes</span>
-                                <h3 id="statTotalVales" style="margin:5px 0 0 0; color:#1e1e1e;">0</h3>
-                            </div>
-                            <div
-                                style="flex:1; background:#f4f4f4; padding:10px; border-radius:5px; text-align:center;">
-                                <span style="font-size:0.8rem; color:#666;">Piezas Totales</span>
-                                <h3 id="statTotalPiezas" style="margin:5px 0 0 0; color:#a4c639;">0</h3>
-                            </div>
-                        </div>
+                    <div style="font-size:0.85rem; background:var(--card-bg); padding:10px; border-radius:5px; margin-bottom:15px; border: 1px solid var(--border-color);">
+                        <p style="margin:2px 0;"><strong>Técnico(s):</strong> <span id="statTecnicos">--</span></p>
+                        <p style="margin:2px 0;"><strong>Equipos / Económicos:</strong> <span id="statEquipos">--</span></p>
+                    </div>
 
-                        <!-- Datos secundarios opcionales -->
-                        <div
-                            style="font-size:0.85rem; color:#555; background:#fafafa; padding:10px; border-radius:5px; margin-bottom:15px;">
-                            <p style="margin:2px 0;"><strong>Técnico(s):</strong> <span id="statTecnicos">--</span></p>
-                            <p style="margin:2px 0;"><strong>Equipos / Económicos:</strong> <span
-                                    id="statEquipos">--</span></p>
-                        </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
+                                <th style="padding:8px;">CÓDIGO</th>
+                                <th style="padding:8px;">DESCRIPCIÓN REFACCIÓN</th>
+                                <th style="padding:8px; text-align:center;">CANT. TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaResumenBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Tabla de Consumos Agrupados -->
-                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+        <!-- MODAL DE HOMOLOGACIÓN Y NIP -->
+        <div id="modalHomologacion" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ Gestor de Homologación de Refacciones</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Texto Detectado (Sinónimo):</label>
+                            <input type="text" id="inputSinonimo" placeholder="Ej. fluido hidraulico">
+                        </div>
+                        <div class="input-group">
+                            <label>Nombre Oficial Homologado:</label>
+                            <input type="text" id="inputOficial" placeholder="Ej. ACEITE HIDRÁULICO">
+                        </div>
+                    </div>
+                    <button class="btn-new" onclick="window.guardarSinonimo()" style="width:100%; margin-bottom:15px;">➕ Vincular Equivalencia</button>
+
+                    <h4>Equivalencias Registradas:</h4>
+                    <div class="table-container" style="max-height: 200px; overflow-y: auto;">
+                        <table>
                             <thead>
-                                <tr style="background:#1e1e1e; color:#a4c639; text-align:left;">
-                                    <th style="padding:8px;">CÓDIGO</th>
-                                    <th style="padding:8px;">DESCRIPCIÓN REFACCIÓN</th>
-                                    <th style="padding:8px; text-align:center;">CANT. TOTAL</th>
+                                <tr>
+                                    <th>Texto Detectado</th>
+                                    <th>Se Convertirá En</th>
+                                    <th>Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="tablaResumenBody"></tbody>
+                            <tbody id="listaSinonimosBody"></tbody>
                         </table>
                     </div>
-
+                </div>
+                <div class="modal-footer" style="display:flex; justify-content:space-between;">
+                    <button class="btn-history" onclick="window.cambiarPinAlmacen()">🔑 Cambiar NIP</button>
+                    <button class="btn-close" onclick="window.cerrarGestorHomologacion()">Cerrar</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Contenedor para editar/agregar al vale -->
-            <div id="seccion-edicion-vale" style="display: none;">
-                <h2>Vale de Salida - Folio: <span id="folio-display"></span></h2>
+    </div>
 
-                <!-- Aquí se inyectarán los artículos que YA existen (No editables) -->
-                <div id="articulos-existentes">
-                    <h4>Artículos ya registrados (Protegidos)</h4>
-                    <div id="lista-existentes"></div>
-                </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, getDoc, setDoc, deleteDoc, runTransaction
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-                <hr>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
+            authDomain: "db-somsi-vales.firebaseapp.com",
+            projectId: "db-somsi-vales",
+            storageBucket: "db-somsi-vales.firebasestorage.app",
+            messagingSenderId: "570162244882",
+            appId: "1:570162244882:web:028488d3dab042d5d897cb"
+        };
 
-                <!-- Aquí se inyectarán los campos para los NUEVOS artículos -->
-                <div id="articulos-nuevos">
-                    <h4>Agregar nuevos artículos</h4>
-                    <div id="lista-nuevos"></div>
-                    <button type="button" id="btn-agregar-fila" onclick="agregarFilaNueva()">+ Añadir otra fila</button>
-                </div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-                <button type="button" id="btn-guardar" onclick="guardarNuevosArticulos()">Guardar Nuevos
-                    Artículos</button>
-            </div>
-
-
-            <script type="module">
-                // 1. Importaciones (Asegúrate de que setDoc esté aquí)
-                import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-                import {
-                    getFirestore,
-                    collection,
-                    addDoc,
-                    getDocs,
-                    query,
-                    orderBy,
-                    limit,
-                    doc,
-                    getDoc,
-                    setDoc,     // <-- Primera verificación
-                    deleteDoc,
-                    runTransaction
-                } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-                const firebaseConfig = {
-                    apiKey: "AIzaSyA1l6ZzE4W3LjYFLWpWYx1z_fL0vt0OJ-o",
-                    authDomain: "db-somsi-vales.firebaseapp.com",
-                    projectId: "db-somsi-vales",
-                    storageBucket: "db-somsi-vales.firebasestorage.app",
-                    messagingSenderId: "570162244882",
-                    appId: "1:570162244882:web:028488d3dab042d5d897cb"
-                };
-
-                const app = initializeApp(firebaseConfig);
-                const db = getFirestore(app);
-
-                // 2. Exportar a global (Aquí es donde script.js lo toma)
-                window.db = db;
-                window.dbFuncs = {
-                    collection,
-                    addDoc,
-                    getDocs,
-                    query,
-                    orderBy,
-                    limit,
-                    doc,
-                    getDoc,
-                    setDoc,     // <-- Segunda verificación: ¡Esto es vital!
-                    deleteDoc,
-                    runTransaction
-                };
-            </script>
-            <script src="js/script.js"></script>
+        window.db = db;
+        window.dbFuncs = {
+            collection, addDoc, getDocs, query, orderBy, limit, doc, getDoc, setDoc, deleteDoc, runTransaction
+        };
+    </script>
+    <script src="js/script.js"></script>
 </body>
 
 </html>

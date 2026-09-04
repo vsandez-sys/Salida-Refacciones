@@ -1,4 +1,4 @@
-/* --- SOMSI Hoja de Estilos (Versión Depurada) --- */
+/* --- SOMSI Hoja de Estilos de Producción --- */
 :root {
     --verde: #A4C639;
     --verde-hover: #8eb32f;
@@ -10,7 +10,7 @@
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.25s ease-in-out;
 
-    /* Variables de Tema */
+    /* Variables de Tema Claro */
     --bg-body: #f4f4f9;
     --bg-container: #ffffff;
     --text-color: #1e1e1e;
@@ -21,6 +21,7 @@
 }
 
 [data-theme="dark"] {
+    /* Variables de Tema Oscuro */
     --bg-body: #121212;
     --bg-container: #1e1e1e;
     --text-color: #e0e0e0;
@@ -52,6 +53,11 @@ body {
     border-radius: 12px;
     box-shadow: var(--shadow);
     border-top: 8px solid var(--verde);
+    transition: border-color 0.3s ease;
+}
+
+body.tema-devolucion .main-container {
+    border-top-color: var(--naranja);
 }
 
 /* Encabezado */
@@ -125,6 +131,10 @@ body {
     border-color: var(--gris-dark);
     color: var(--verde);
     pointer-events: none;
+}
+
+body.tema-devolucion .tarjeta-nav.activa {
+    color: var(--naranja);
 }
 
 .tarjeta-nav.nav-bloqueada {
@@ -229,8 +239,20 @@ input#folioVale {
     font-size: 1.1rem;
 }
 
+[data-theme="dark"] input#folioVale {
+    background: #331515;
+    color: #ff6b6b;
+    border-color: #5c2323;
+}
+
 .textarea-mock {
     min-height: 90px;
+}
+
+.item-bloqueado {
+    opacity: 0.75;
+    cursor: not-allowed;
+    background-color: var(--border-color) !important;
 }
 
 /* Tablas */
@@ -253,6 +275,10 @@ th {
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
+}
+
+.tema-devolucion th {
+    color: var(--naranja);
 }
 
 td {
@@ -288,7 +314,7 @@ td {
     margin-top: 30px;
 }
 
-button, .btn-pdf, .btn-history, .btn-excel, .btn-theme-toggle, .btn-cargar {
+button, .btn-pdf, .btn-history, .btn-excel, .btn-theme-toggle, .btn-cargar, .btn-add, .btn-new, .btn-close {
     padding: 12px 20px;
     border: none;
     border-radius: 6px;
@@ -322,14 +348,48 @@ button:active {
     color: var(--blanco);
 }
 
+.btn-add {
+    background: transparent;
+    border: 2px dashed var(--verde);
+    color: var(--verde);
+    width: 100%;
+    margin-top: 10px;
+    box-shadow: none;
+}
+
+.btn-add:hover {
+    background: var(--verde);
+    color: var(--gris-dark);
+}
+
+.tema-devolucion .btn-add {
+    border-color: var(--naranja);
+    color: var(--naranja);
+}
+
+.tema-devolucion .btn-add:hover {
+    background: var(--naranja);
+    color: var(--blanco);
+}
+
 .btn-history {
     background: #4a5568;
     color: white;
     flex: 1;
 }
 
+.btn-new {
+    background: #2b6cb0;
+    color: white;
+}
+
 .btn-excel {
     background: #107c41;
+    color: white;
+}
+
+.btn-close {
+    background: #718096;
     color: white;
 }
 
@@ -338,6 +398,20 @@ button:active {
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 20px;
+}
+
+.btn-del-mini {
+    background: rgba(229, 62, 62, 0.15);
+    color: #e53e3e;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.btn-del-mini:hover {
+    background: #e53e3e;
+    color: white;
 }
 
 /* Toast Notifications */
@@ -370,7 +444,7 @@ button:active {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* Modal */
+/* Modales */
 .modal {
     display: none;
     position: fixed;
@@ -389,6 +463,7 @@ button:active {
 
 .modal-content {
     background: var(--bg-container);
+    color: var(--text-color);
     width: 95%;
     max-width: 750px;
     border-radius: 12px;
@@ -396,6 +471,7 @@ button:active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .modal-header {
@@ -405,13 +481,22 @@ button:active {
     text-align: center;
 }
 
+.tema-devolucion .modal-header {
+    color: var(--naranja);
+}
+
 .modal-body {
     padding: 24px;
     overflow-y: auto;
 }
 
+.modal-footer {
+    padding: 15px 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-container);
+}
+
 /* Adaptaciones Móviles */
-/* Tablets y Celulares (<= 768px) */
 @media (max-width: 768px) {
     .actions {
         position: sticky;
@@ -424,25 +509,68 @@ button:active {
         border: 1px solid var(--border-color);
     }
 
+    .modal {
+        padding: 0 !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+    }
+
+    .modal-body {
+        padding: 15px !important;
+    }
+
+    #modalHistorial table thead,
+    .modal table thead {
+        display: none !important;
+    }
+
+    #modalHistorial table, 
+    #modalHistorial tbody {
+        display: block !important;
+        width: 100% !important;
+    }
+
     #historialBody tr.fila-historial {
-        display: flex;
-        flex-direction: column;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
+        display: flex !important;
+        flex-direction: column !important;
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        padding: 14px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+        gap: 6px !important;
     }
 
     #historialBody tr.fila-historial td {
-        display: flex;
-        justify-content: space-between;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         border: none !important;
         padding: 4px 0 !important;
+        font-size: 0.9rem !important;
+    }
+
+    #historialBody tr.fila-historial td:last-child {
+        margin-top: 8px !important;
+        padding-top: 10px !important;
+        border-top: 1px dashed var(--border-color) !important;
+        justify-content: flex-end !important;
+        gap: 12px !important;
+    }
+
+    .btn-cargar, .btn-del-mini {
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+        min-height: 40px !important;
     }
 }
 
-/* Celulares Estándar (<= 680px) */
 @media (max-width: 680px) {
     .main-container {
         padding: 20px;
@@ -467,7 +595,6 @@ button:active {
     }
 }
 
-/* Celulares Estrechos (<= 480px) */
 @media (max-width: 480px) {
     .nav-vales {
         flex-direction: column;
@@ -479,81 +606,8 @@ button:active {
     }
 }
 
-/* Seguridad para impresión nativa */
 @media print {
     .no-print { 
         display: none !important; 
-    }
-}
-
-/* =========================================
-   CORRECCIÓN INTEGRAL DE MODAL DE HISTORIAL EN MÓVIL
-   ========================================= */
-@media (max-width: 768px) {
-    /* 1. Modal a pantalla completa para evitar saltos por teclado o barra del navegador */
-    .modal {
-        padding: 0 !important;
-    }
-
-    .modal-content {
-        width: 100% !important;
-        height: 100dvh !important; /* dvh se adapta al alto real dinámico del celular */
-        max-height: 100dvh !important;
-        border-radius: 0 !important;
-    }
-
-    .modal-body {
-        padding: 15px !important;
-    }
-
-    /* 2. Ocultar los encabezados de tabla (thead) que estorban en móvil */
-    #modalHistorial table thead,
-    .modal table thead {
-        display: none !important;
-    }
-
-    #modalHistorial table, 
-    #modalHistorial tbody {
-        display: block !important;
-        width: 100% !important;
-    }
-
-    /* 3. Tarjetas independientes con sombras y mejor estructura */
-    #historialBody tr.fila-historial {
-        display: flex !important;
-        flex-direction: column !important;
-        background: var(--card-bg) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 10px !important;
-        padding: 14px !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-        gap: 6px !important;
-    }
-
-    /* 4. Alineación de datos dentro de la tarjeta */
-    #historialBody tr.fila-historial td {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        border: none !important;
-        padding: 4px 0 !important;
-        font-size: 0.9rem !important;
-    }
-
-    /* 5. Zona de acciones separada y cómoda para el pulgar */
-    #historialBody tr.fila-historial td:last-child {
-        margin-top: 8px !important;
-        padding-top: 10px !important;
-        border-top: 1px dashed var(--border-color) !important;
-        justify-content: flex-end !important;
-        gap: 12px !important;
-    }
-
-    /* Botones dentro del historial con mejor área de toque */
-    .btn-cargar, .btn-del-mini {
-        padding: 10px 16px !important;
-        font-size: 0.85rem !important;
-        min-height: 40px !important;
     }
 }
