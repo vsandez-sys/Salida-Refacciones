@@ -1,6 +1,45 @@
 /* --- SOMSI - SISTEMA DE VALES PRO (SALIDA) --- */
 
 let idDocumentoActual = "";
+
+// --- CATÁLOGO UNIVERSAL DE CONSUMIBLES ---
+const CATALOGO_UNIVERSAL = [
+    { code: "Q-WD40", desc: "AFLOJATODO", tags: ["wd40", "wd-40", "wd 40", "antioxido", "antioxidante", "afloja todo", "penetrante", "aceite spray", "lubricante spray"] },
+    { code: "Q-CRC", desc: "LIMPIADOR DE CARBURADOR", tags: ["carbuclean", "carbu clean", "limpia carburador", "limpiador carburador", "crc", "limpia cuerpo de aceleracion", "troyano"] },
+    { code: "Q-DClean", desc: "DIELÉCTRICO", tags: ["dielectrico", "dclean", "d-clean", "limpiador de contactos", "limpia contactos", "contact cleaner", "limpiador electronico"] },
+    { code: "Q-Chain", desc: "LUBRICANTE PARA CADENA", tags: ["lubricante de cadena", "aceite para cadena", "grasa para cadena", "chain lube", "spray para cadena", "lubricante chain"] },
+    { code: "Q-Grease", desc: "TUBO DE GRASA", tags: ["grasa", "tubo de grasa", "cartucho de grasa", "salchicha de grasa", "grasa lubricante"] },
+    { code: "Q-Des-S", desc: "DESENGRASANTE NARANJA SENCILLO", tags: ["desengrasante sencillo", "desengrasante naranja", "desengrasante citrico", "limpiador naranja", "desengrasante normal"] },
+    { code: "Q-Des-SD", desc: "DESENGRASANTE NARANJA DILUIDO", tags: ["desengrasante diluido", "desengrasante rebajado", "desengrasante sd", "desengrasante naranja diluido", "desengrasante preparado"] },
+    { code: "Q-Des-HD", desc: "DESENGRASANTE CONCENTRADO", tags: ["desengrasante concentrado", "desengrasante hd", "desengrasante pesado", "desengrasante motor", "liquido para motor", "lavamotor", "desengrasante industrial"] },
+    { code: "6403", desc: "FLUIDO HIDRÁULICO", tags: ["fluido hidraulico", "aceite hidraulico", "aceite 6403", "hidraulico 6403", "aceite thf", "bote de hidraulico", "cubeta hidraulico"] },
+    { code: "L-Clear", desc: "LENTES TRANSPARENTES", tags: ["lentes claros", "lentes transparentes", "gafas claras", "lentes blancos", "lentes seguridad claros"] },
+    { code: "L-Black", desc: "LENTES OSCUROS", tags: ["lentes oscuros", "lentes negros", "gafas oscuras", "lentes de sol", "lentes seguridad oscuros", "lentes ahumados"] },
+    { code: "C-100...", desc: "CINCHOS DE PLÁSTICO", tags: ["cincho", "cinchos", "cinchos plastico", "corbatas", "corbatas plastico", "tayrap", "ty-rap", "zip ties", "abrazaderas plastico"] },
+    { code: "G-AC-M", desc: "GUANTES ANTICORTE TALLA M", tags: ["guantes anticorte m", "guantes anticorte medianos", "guantes grises m", "guantes de corte m", "guantes anticorte talla m"] },
+    { code: "G-AC-G", desc: "GUANTES ANTICORTE TALLA G", tags: ["guantes anticorte g", "guantes anticorte grandes", "guantes grises g", "guantes anticorte l", "guantes anticorte talla g", "guantes de corte g"] },
+    { code: "G-SN-M", desc: "GUANTES NITRILO TALLA M", tags: ["guantes nitrilo m", "guantes de nitrilo medianos", "guante negro m", "guantes palma nitrilo m", "guantes mecanico m"] },
+    { code: "G-SN-G", desc: "GUANTES NITRILO TALLA G", tags: ["guantes nitrilo g", "guantes de nitrilo grandes", "guante nitrilo l", "guantes negros g", "guantes palma nitrilo g"] },
+    { code: "CH-UT-N", desc: "CHALECO NARANJA", tags: ["chaleco naranja", "chaleco vial", "chaleco de seguridad", "chaleco reflejante", "chaleco alta visibilidad"] },
+    { code: "C-Trapos", desc: "BOLSA DE TRAPOS (20KG)", tags: ["trapos", "bolsa de trapos", "costal de trapos", "trapo industrial", "wape", "huape", "paca de trapos", "franelas"] }
+];
+
+// Inyectar opciones al navegador para sugerencias visuales (Dropdown nativo)
+function inicializarDatalist() {
+    let datalist = document.getElementById('listaConsumiblesBase');
+    if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'listaConsumiblesBase';
+        document.body.appendChild(datalist);
+    }
+    
+    CATALOGO_UNIVERSAL.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.desc; // Sugerirá "AFLOJATODO", "DIELÉCTRICO", etc.
+        datalist.appendChild(option);
+    });
+}
+
 window.historialLocal = []; // Almacena en memoria el historial para filtrados e impresiones
 
 const OBTENER_PIN_ALMACEN = () => localStorage.getItem("somsi_pin_almacen") || "1234";
@@ -14,6 +53,7 @@ function normalizarConcepto(descripcion) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarDatalist();
     if (document.getElementById('itemsBody').children.length === 0) {
         window.addRow();
     }
@@ -25,9 +65,11 @@ window.addRow = function () {
     const tbody = document.getElementById('itemsBody');
     const tr = document.createElement('tr');
     tr.className = "fila-item-nueva";
+    
+    // NOTA: Se añadió 'list="listaConsumiblesBase"' en desc-field
     tr.innerHTML = `
         <td><input type="number" class="cant-field" value="1"></td>
-        <td><input type="text" class="desc-field" placeholder="Descripción..."></td>
+        <td><input type="text" class="desc-field" placeholder="Descripción..." list="listaConsumiblesBase"></td>
         <td><input type="text" class="code-field" placeholder="Código..."></td>
         <td class="no-print">
             <button onclick="this.parentElement.parentElement.remove(); window.evaluarEstadoFormulario();" class="btn-del" style="background:none;border:none;color:red;cursor:pointer;font-size:1.2rem;">×</button>
@@ -38,6 +80,33 @@ window.addRow = function () {
     const descInput = tr.querySelector('.desc-field');
     const codeInput = tr.querySelector('.code-field');
 
+    // --- LÓGICA DE AUTO-REEMPLAZO UNIVERSAL ---
+    descInput.addEventListener('change', (e) => {
+        const textoOriginal = e.target.value;
+        const textoLimpio = textoOriginal.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (!textoLimpio) return;
+
+        // Buscar coincidencia en diccionario (por nombre oficial o sinónimos)
+        const coincidencia = CATALOGO_UNIVERSAL.find(item => {
+            if (item.desc.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === textoLimpio) return true;
+            return item.tags.some(tag => textoLimpio.includes(tag));
+        });
+
+        // Si hay match, auto-rellenar y dar feedback visual (color verde)
+        if (coincidencia) {
+            e.target.value = coincidencia.desc;
+            codeInput.value = coincidencia.code;
+            
+            e.target.style.backgroundColor = "#e8f5e9";
+            codeInput.style.backgroundColor = "#e8f5e9";
+            setTimeout(() => {
+                e.target.style.backgroundColor = "var(--input-bg)";
+                codeInput.style.backgroundColor = "var(--input-bg)";
+            }, 600);
+        }
+    });
+
+    // --- NAVEGACIÓN POR ENTER ---
     cantInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); descInput.focus(); descInput.select(); }
     });
@@ -57,7 +126,6 @@ window.addRow = function () {
         }
     });
 };
-
 window.filtrarHistorial = function () {
     const texto = document.getElementById('busquedaEco').value.toUpperCase().trim();
     const filas = document.querySelectorAll('.fila-historial');
