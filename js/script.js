@@ -8,7 +8,7 @@ const CATALOGO_UNIVERSAL = [
     { code: "Q-CRC", desc: "LIMPIADOR DE CARBURADOR", tags: ["carbuclean", "carbu clean", "limpia carburador", "limpiador carburador", "crc", "limpia cuerpo de aceleracion", "troyano"] },
     { code: "Q-DClean", desc: "DIELÉCTRICO", tags: ["dielectrico", "dclean", "d-clean", "limpiador de contactos", "limpia contactos", "contact cleaner", "limpiador electronico"] },
     { code: "Q-Chain", desc: "LUBRICANTE PARA CADENA", tags: ["lubricante de cadena", "aceite para cadena", "grasa para cadena", "chain lube", "spray para cadena", "lubricante chain"] },
-    { code: "Q-Grease", desc: "TUBO DE GRASA", tags: ["grasa", "tubo de grasa", "cartucho de grasa", "salchicha de grasa", "grasa lubricante"] },
+    { code: "Q-Grease", desc: "TUBO DE GRASA", tags: ["tubo de grasa", "cartucho de grasa", "salchicha de grasa", "grasa lubricante"] },
     { code: "Q-Des-S", desc: "DESENGRASANTE NARANJA SENCILLO", tags: ["desengrasante sencillo", "desengrasante naranja", "desengrasante citrico", "limpiador naranja", "desengrasante normal"] },
     { code: "Q-Des-SD", desc: "DESENGRASANTE NARANJA DILUIDO", tags: ["desengrasante diluido", "desengrasante rebajado", "desengrasante sd", "desengrasante naranja diluido", "desengrasante preparado"] },
     { code: "Q-Des-HD", desc: "DESENGRASANTE CONCENTRADO", tags: ["desengrasante concentrado", "desengrasante hd", "desengrasante pesado", "desengrasante motor", "liquido para motor", "lavamotor", "desengrasante industrial"] },
@@ -27,39 +27,24 @@ const CATALOGO_UNIVERSAL = [
 // --- CATÁLOGO DE TÉCNICOS ---
 const CATALOGO_TECNICOS = [
     { nombre: "Emilio Alarcon", tags: ["emilio", "emi", "emilio alarcon villarreal", "alarcon", "villarreal", "alarcon villarreal", "emilio villarreal", "e alarcon", "emilio a", "e. alarcon"] },
-    
-    { nombre: "Josue Arreola", tags: ["josue", "josué", "julian", "josue julian", "julian arreola", "josue julian arreola martinez", "arreola", "martinez", "arreola martinez", "josue martinez", "julian martinez", "j arreola", "josue a", "j. arreola"] },
-    
-    { nombre: "Juan Chavez", tags: ["juan francisco", "francisco", "pancho", "pancho chavez", "paco", "paco chavez", "francisco chavez", "juan francisco chavez vera", "chavez", "vera", "chavez vera", "juan vera", "j chavez", "juan c", "f chavez", "juanc"] },
-    
+    { nombre: "Josue Arreola", tags: ["josue", "julian", "josue julian", "julian arreola", "josue julian arreola martinez", "arreola", "martinez", "arreola martinez", "josue martinez", "julian martinez", "j arreola", "josue a", "j. arreola"] },
+    { nombre: "Juan Chavez", tags: ["juan chavez", "juan francisco", "francisco", "pancho", "pancho chavez", "paco", "paco chavez", "francisco chavez", "juan francisco chavez vera", "chavez", "vera", "chavez vera", "juan vera", "j chavez", "juan c", "f chavez", "juanc"] },
     { nombre: "Hugo Garcia", tags: ["hugo", "hugo garcia torres", "garcia", "torres", "garcia torres", "hugo torres", "h garcia", "hugo g", "h. garcia"] },
-    
     { nombre: "Carlos Martinez", tags: ["carlos", "omar", "carlos omar", "omar martinez", "carlos omar martinez garcia", "charly", "martinez", "garcia", "martinez garcia", "carlos garcia", "omar garcia", "c martinez", "c. martinez"] },
-    
     { nombre: "Guillermo Ramos", tags: ["guillermo", "memo", "memito", "memo ramos", "guillermo ramos hernandez", "ramos", "hernandez", "ramos hernandez", "guillermo hernandez", "g ramos", "guillermo r", "g. ramos"] },
-    
-    { nombre: "Jose Rojas", tags: ["jose", "josé", "jose emigdio", "emigdio", "emigdio rojas", "jose emigdio rojas garcia", "pepe", "pepito", "pepe rojas", "rojas", "garcia", "rojas garcia", "jose garcia", "emigdio garcia", "j rojas", "j. rojas"] },
-    
+    { nombre: "Jose Rojas", tags: ["jose", "jose emigdio", "emigdio", "emigdio rojas", "jose emigdio rojas garcia", "pepe", "pepito", "pepe rojas", "rojas", "garcia", "rojas garcia", "jose garcia", "emigdio garcia", "j rojas", "j. rojas"] },
     { nombre: "Mario Valenzuela", tags: ["mario", "mario valenzuela rocha", "valenzuela", "rocha", "valenzuela rocha", "mario rocha", "mayo", "m valenzuela", "mario v", "m. valenzuela"] },
-    
     { nombre: "Juan de Dios", tags: ["juan de dios", "juan de dios acosta", "juan de dios acosta zambrano", "acosta", "zambrano", "acosta zambrano", "juan acosta", "juan zambrano", "jd", "j.d.", "juan d", "jd acosta", "j d acosta", "juanD"] },
-    
-    { nombre: "Moises Sedeño", tags: ["moises", "moisés", "moi", "moy", "moises sedeno", "moises sedeño", "moises sedeño aguilar", "sedeno", "sedeño", "aguilar", "sedeño aguilar", "sedeno aguilar", "moises aguilar", "m sedeño", "m sedeno", "moi sedeño", "moy sedeño"] }
+    { nombre: "Moises Sedeño", tags: ["moises", "moi", "moy", "moises sedeno", "moises sedeno aguilar", "sedeno", "aguilar", "sedeno aguilar", "moises aguilar", "m sedeno", "moi sedeno", "moy sedeno"] }
 ];
 
 // --- CATÁLOGO DE SUPERVISORES (AUTORIZA) ---
 const CATALOGO_SUPERVISORES = [
     { nombre: "Guillermo Ramos", tags: ["guillermo", "memo", "memito", "memo ramos", "guillermo ramos hernandez", "ramos", "hernandez", "ramos hernandez", "guillermo hernandez", "g ramos", "guillermo r", "g. ramos"] },
-
     { nombre: "Delia Castro", tags: ["delia", "guadalupe", "delia guadalupe", "delia guadalupe castro castro", "castro", "castro castro", "delia castro", "d castro", "delia c", "d. castro"] },
-    
-    { nombre: "Alvaro Alarcon", tags: ["alvaro", "álvaro", "alvaro alarcon haro", "alarcon", "haro", "alarcon haro", "alvaro haro", "a alarcon", "alvaro a", "a. alarcon"] },
-    
-    { nombre: "Victor Sandez", tags: ["victor", "víctor", "antonio", "victor antonio", "victor antonio sandez garcia", "sandez", "garcia", "sandez garcia", "victor garcia", "antonio sandez", "v sandez", "victor s", "v. sandez"] },
-    
-    { nombre: "Joseph Castañeda", tags: ["joseph", "omar", "joseph omar", "joseph omar castañeda castro", "joseph castaneda", "castañeda", "castaneda", "castro", "castañeda castro", "castaneda castro", "joseph castro", "omar castañeda", "omar castaneda", "j castañeda", "j castaneda", "joseph c"] }
-    
-    
+    { nombre: "Alvaro Alarcon", tags: ["alvaro", "alvaro alarcon haro", "alarcon", "haro", "alarcon haro", "alvaro haro", "a alarcon", "alvaro a", "a. alarcon"] },
+    { nombre: "Victor Sandez", tags: ["victor", "antonio", "victor antonio", "victor antonio sandez garcia", "sandez", "garcia", "sandez garcia", "victor garcia", "antonio sandez", "v sandez", "victor s", "v. sandez"] },
+    { nombre: "Joseph Castañeda", tags: ["joseph", "omar", "joseph omar", "joseph omar castaneda castro", "joseph castaneda", "castaneda", "castro", "castaneda castro", "joseph castro", "omar castaneda", "j castaneda", "joseph c"] }
 ];
 
 // --- CATÁLOGO DE EQUIPOS ---
@@ -580,11 +565,17 @@ window.addRow = function () {
         const textoLimpio = textoOriginal.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (!textoLimpio) return;
 
-        // Buscar coincidencia en diccionario (por nombre oficial o sinónimos)
-        const coincidencia = CATALOGO_UNIVERSAL.find(item => {
-            if (item.desc.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === textoLimpio) return true;
-            return item.tags.some(tag => textoLimpio.includes(tag));
-        });
+        // 1. Prioridad Absoluta: Buscar coincidencia EXACTA con el nombre oficial (Datalist)
+        let coincidencia = CATALOGO_UNIVERSAL.find(item => 
+            item.desc.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === textoLimpio
+        );
+
+        // 2. Si no seleccionaron el nombre oficial, buscamos con exactitud en los tags (Sinónimos)
+        if (!coincidencia) {
+            coincidencia = CATALOGO_UNIVERSAL.find(item => 
+                item.tags.some(tag => tag === textoLimpio)
+            );
+        }
 
         // Si hay match, auto-rellenar y dar feedback visual (color verde)
         if (coincidencia) {
