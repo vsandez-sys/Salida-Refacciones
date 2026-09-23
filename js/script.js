@@ -30,7 +30,7 @@ const CATALOGO_TECNICOS = [
     
     { nombre: "Josue Arreola", tags: ["josue", "josué", "julian", "josue julian", "julian arreola", "josue julian arreola martinez", "arreola", "martinez", "arreola martinez", "josue martinez", "julian martinez", "j arreola", "josue a", "j. arreola"] },
     
-    { nombre: "Juan Chavez", tags: ["juan", "juan francisco", "francisco", "pancho", "pancho chavez", "paco", "paco chavez", "francisco chavez", "juan francisco chavez vera", "chavez", "vera", "chavez vera", "juan vera", "j chavez", "juan c", "f chavez"] },
+    { nombre: "Juan Chavez", tags: ["juan francisco", "francisco", "pancho", "pancho chavez", "paco", "paco chavez", "francisco chavez", "juan francisco chavez vera", "chavez", "vera", "chavez vera", "juan vera", "j chavez", "juan c", "f chavez", "juanc"] },
     
     { nombre: "Hugo Garcia", tags: ["hugo", "hugo garcia torres", "garcia", "torres", "garcia torres", "hugo torres", "h garcia", "hugo g", "h. garcia"] },
     
@@ -42,7 +42,7 @@ const CATALOGO_TECNICOS = [
     
     { nombre: "Mario Valenzuela", tags: ["mario", "mario valenzuela rocha", "valenzuela", "rocha", "valenzuela rocha", "mario rocha", "mayo", "m valenzuela", "mario v", "m. valenzuela"] },
     
-    { nombre: "Juan de Dios", tags: ["juan de dios", "juan de dios acosta", "juan de dios acosta zambrano", "acosta", "zambrano", "acosta zambrano", "juan acosta", "juan zambrano", "jd", "j.d.", "juan d", "jd acosta", "j d acosta"] },
+    { nombre: "Juan de Dios", tags: ["juan de dios", "juan de dios acosta", "juan de dios acosta zambrano", "acosta", "zambrano", "acosta zambrano", "juan acosta", "juan zambrano", "jd", "j.d.", "juan d", "jd acosta", "j d acosta", "juanD"] },
     
     { nombre: "Moises Sedeño", tags: ["moises", "moisés", "moi", "moy", "moises sedeno", "moises sedeño", "moises sedeño aguilar", "sedeno", "sedeño", "aguilar", "sedeño aguilar", "sedeno aguilar", "moises aguilar", "m sedeño", "m sedeno", "moi sedeño", "moy sedeño"] }
 ];
@@ -50,14 +50,16 @@ const CATALOGO_TECNICOS = [
 // --- CATÁLOGO DE SUPERVISORES (AUTORIZA) ---
 const CATALOGO_SUPERVISORES = [
     { nombre: "Guillermo Ramos", tags: ["guillermo", "memo", "memito", "memo ramos", "guillermo ramos hernandez", "ramos", "hernandez", "ramos hernandez", "guillermo hernandez", "g ramos", "guillermo r", "g. ramos"] },
+
+    { nombre: "Delia Castro", tags: ["delia", "guadalupe", "delia guadalupe", "delia guadalupe castro castro", "castro", "castro castro", "delia castro", "d castro", "delia c", "d. castro"] },
     
     { nombre: "Alvaro Alarcon", tags: ["alvaro", "álvaro", "alvaro alarcon haro", "alarcon", "haro", "alarcon haro", "alvaro haro", "a alarcon", "alvaro a", "a. alarcon"] },
     
     { nombre: "Victor Sandez", tags: ["victor", "víctor", "antonio", "victor antonio", "victor antonio sandez garcia", "sandez", "garcia", "sandez garcia", "victor garcia", "antonio sandez", "v sandez", "victor s", "v. sandez"] },
     
-    { nombre: "Joseph Castañeda", tags: ["joseph", "omar", "joseph omar", "joseph omar castañeda castro", "joseph castaneda", "castañeda", "castaneda", "castro", "castañeda castro", "castaneda castro", "joseph castro", "omar castañeda", "omar castaneda", "j castañeda", "j castaneda", "joseph c"] },
+    { nombre: "Joseph Castañeda", tags: ["joseph", "omar", "joseph omar", "joseph omar castañeda castro", "joseph castaneda", "castañeda", "castaneda", "castro", "castañeda castro", "castaneda castro", "joseph castro", "omar castañeda", "omar castaneda", "j castañeda", "j castaneda", "joseph c"] }
     
-    { nombre: "Delia Castro", tags: ["delia", "guadalupe", "delia guadalupe", "delia guadalupe castro castro", "castro", "castro castro", "delia castro", "d castro", "delia c", "d. castro"] }
+    
 ];
 
 // --- CATÁLOGO DE EQUIPOS ---
@@ -531,7 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!textoLimpio) return;
 
             const coincidencia = CATALOGO_SUPERVISORES.find(sup => {
-                if (sup.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === textoLimpio) return true;
+                const nombreLimpio = sup.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (nombreLimpio === textoLimpio) return true;
                 return sup.tags.some(tag => textoLimpio.includes(tag));
             });
 
@@ -542,7 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     // Inicializaciones
     if (document.getElementById('itemsBody') && document.getElementById('itemsBody').children.length === 0) {
         window.addRow();
